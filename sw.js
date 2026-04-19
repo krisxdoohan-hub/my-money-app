@@ -1,58 +1,78 @@
-// PWA Service Worker 離線快取引擎
-// 這支程式會在背景攔截所有的網路請求，並將 Tailwind CSS 與圖示等資源動態存入手機
+// PWA Service Worker 離線快取引擎 V2 (企業級快取優先策略)
 
-const CACHE_NAME = 'money-app-cache-v1';
+const CACHE_NAME = 'money-app-cache-v2'; // 版本號升級，觸發強制更新
+const CORE_ASSETS = [
+    './',
+    './index.html'
+];
 
-// 當 Service Worker 被安裝時
+// 安裝階段：預先載入核心骨架
 self.addEventListener('install', event => {
-    // 強制立即生效，不需等待舊版網頁關閉
-    self.skipWaiting();
-    
-    // 預先快取核心首頁檔案
+    self.skipWaiting(); // 強制立即接管，不等舊版關閉
     event.waitUntil(
         caches.open(CACHE_NAME).then(cache => {
-            return cache.addAll([
-                './',
-                './index.html'
-            ]);
+            return cache.addAll(CORE_ASSETS);
         })
     );
 });
 
-// 當 Service Worker 正式啟動時
+// 啟動階段：清除舊版垃圾快取，確保容量乾淨
 self.addEventListener('activate', event => {
-    // 接管所有頁面控制權
-    event.waitUntil(clients.claim());
+    event.waitUntil(clients.claim()); // 立即控制所有開啟的網頁
+    event.waitUntil(
+        caches.keys().then(cacheNames => {
+            return Promise.all(
+                cacheNames.map(cacheName => {
+                    if (cacheName !== CACHE_NAME) {
+                        return caches.delete(cacheName); // 刪除 v1 舊快取
+                    }
+                })
+            );
+        })
+    );
 });
 
-// 攔截所有網路請求 (動態快取機制)
+// 攔截網路請求：採用 Cache First (快取優先) 結合背景更新機制
 self.addEventListener('fetch', event => {
-    // 只攔截 GET 請求
+    // 忽略非 GET 請求 (例如 POST)
     if (event.request.method !== 'GET') return;
 
     event.respondWith(
         caches.match(event.request).then(cachedResponse => {
-            // 1. 如果手機快取裡已經有這個檔案 (例如圖示或 CSS)，就直接離線給予，不耗費網路
+            
+            // 策略 1：如果手機裡已經有快取，【立刻】回傳給畫面，達成 0.1 秒離線秒開
             if (cachedResponse) {
-                return cachedResponse;
-            }
-
-            // 2. 如果快取沒有，才真的連上網路去抓
-            return fetch(event.request).then(networkResponse => {
-                // 確認網路回應是正常的 (status 200)，且不是擴充套件的奇怪請求
-                if (!networkResponse || networkResponse.status !== 200 || networkResponse.type !== 'basic' && networkResponse.type !== 'cors') {
-                    return networkResponse;
-                }
-
-                // 3. 把剛從網路抓下來的檔案「偷偷複製一份」存進手機快取，下次離線就能用了！
-                const responseToCache = networkResponse.clone();
-                caches.open(CACHE_NAME).then(cache => {
-                    cache.put(event.request, responseToCache);
+                
+                // 【幕後動作】：即便已經秒開了，依然在背景偷偷去網路上抓最新版，並更新進手機
+                // 這樣下次打開就會是最新版，而不需要等待網路
+                fetch(event.request).then(networkResponse => {
+                    // 放行 status === 0 (Opaque Response)，確保 Tailwind CSS 與外部圖示都能被快取
+                    if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+                        caches.open(CACHE_NAME).then(cache => {
+                            cache.put(event.request, networkResponse.clone());
+                        });
+                    }
+                }).catch(() => {
+                    // 沒網路時背景更新失敗，安靜忽略，不影響使用者
                 });
 
+                return cachedResponse; 
+            }
+
+            // 策略 2：如果快取沒有 (例如第一次開啟)，才真的去網路上抓
+            return fetch(event.request).then(networkResponse => {
+                if (networkResponse && (networkResponse.status === 200 || networkResponse.status === 0)) {
+                    const responseToCache = networkResponse.clone();
+                    caches.open(CACHE_NAME).then(cache => {
+                        cache.put(event.request, responseToCache);
+                    });
+                }
                 return networkResponse;
             }).catch(() => {
-                // 如果連網路都斷了，且快取也沒有，就在這裡安靜失敗，不讓網頁崩潰
+                // 策略 3：終極防線。如果斷網，且剛好沒快取到，強制回傳首頁，防止白畫面崩潰
+                if (event.request.mode === 'navigate' || event.request.headers.get('accept').includes('text/html')) {
+                    return caches.match('./index.html');
+                }
             });
         })
     );
