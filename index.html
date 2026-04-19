@@ -24,18 +24,6 @@
         }
         .clickable-cell { cursor: pointer; transition: background-color 0.2s; }
         .clickable-cell:active { background-color: #e0e7ff; }
-        
-        /* 美化 optgroup 在不同手機的顯示效果 */
-        select optgroup {
-            font-weight: bold;
-            color: #4f46e5;
-            background-color: #f3f4f6;
-        }
-        select option {
-            font-weight: normal;
-            color: #1f2937;
-            background-color: #ffffff;
-        }
     </style>
 </head>
 <body id="body-tag" class="bg-gray-200 text-gray-800 font-sans antialiased min-h-screen flex flex-col items-center">
@@ -267,11 +255,25 @@
     </div>
 
     <script>
+        // ================== PWA Service Worker 註冊 (離線快取引擎) ==================
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                // 向瀏覽器註冊同目錄下的 sw.js 作為離線引擎
+                navigator.serviceWorker.register('./sw.js')
+                    .then(registration => {
+                        console.log('離線快取引擎註冊成功！', registration.scope);
+                    })
+                    .catch(error => {
+                        console.log('離線快取引擎註冊失敗：', error);
+                    });
+            });
+        }
+
         let records = [];
         let currentViewDate = new Date();
         let currentAnnualYear = new Date().getFullYear();
         
-        // 新增：定義主從類別的對應關係
+        // 定義主從類別的對應關係
         const categoryMap = {
             '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'],
             '交通': ['加油', '車票', '其他'],
