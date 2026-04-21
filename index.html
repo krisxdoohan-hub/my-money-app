@@ -100,7 +100,7 @@
                 
                 <!-- 版本號顯示區塊 -->
                 <div class="text-center text-xs text-gray-400 mt-6 mb-2">
-                    系統版本：v1.1.0
+                    系統版本：v1.2.0
                 </div>
 
             </section>
@@ -123,7 +123,8 @@
                 </div>
             </aside>
 
-            <div class="flex-1 overflow-auto bg-gray-100 relative">
+            <!-- 【電腦版滑動升級】加入 id="table-scroll-container" 與 cursor-grab 游標樣式 -->
+            <div id="table-scroll-container" class="flex-1 overflow-auto bg-gray-100 relative cursor-grab">
                 <table class="border-collapse w-max min-w-full text-sm bg-white">
                     <thead id="sheet-thead" class="bg-white">
                         <!-- 動態生成 -->
@@ -307,6 +308,9 @@
         
         let editingRecordId = null;
         let selectedRecordForModal = null; 
+        
+        // 【防誤觸機制】標記目前是否正在用滑鼠拖曳報表
+        let isDraggingTable = false; 
 
         function init() {
             const savedData = localStorage.getItem('expenseRecords');
@@ -323,6 +327,74 @@
             document.getElementById('input-date').value = todayStr;
             updateCurrencyFilterOptions();
             updateSubCategories(); // 初始化次類別選單
+            
+            // 啟動電腦版專用的滑鼠拖曳引擎
+            setupTableScroll(); 
+        }
+
+        // ================== 電腦版滑鼠拖曳引擎 (Drag-to-Scroll) ==================
+        function setupTableScroll() {
+            const slider = document.getElementById('table-scroll-container');
+            if(!slider) return;
+            
+            let isDown = false;
+            let startX;
+            let scrollLeft;
+            let startY;
+            let scrollTop;
+
+            // 當滑鼠按下時
+            slider.addEventListener('mousedown', (e) => {
+                isDown = true;
+                isDraggingTable = false; // 初始按下時還不算拖曳
+                
+                // 改變游標變成抓緊的狀態
+                slider.classList.add('cursor-grabbing');
+                slider.classList.remove('cursor-grab');
+                
+                // 記錄滑鼠當下的起始位置與卷軸位置
+                startX = e.pageX - slider.offsetLeft;
+                startY = e.pageY - slider.offsetTop;
+                scrollLeft = slider.scrollLeft;
+                scrollTop = slider.scrollTop;
+            });
+            
+            // 當滑鼠離開表格區域時
+            slider.addEventListener('mouseleave', () => {
+                isDown = false;
+                slider.classList.add('cursor-grab');
+                slider.classList.remove('cursor-grabbing');
+            });
+            
+            // 當滑鼠按鍵放開時
+            slider.addEventListener('mouseup', () => {
+                isDown = false;
+                slider.classList.add('cursor-grab');
+                slider.classList.remove('cursor-grabbing');
+            });
+            
+            // 當滑鼠移動時 (核心滑動邏輯)
+            slider.addEventListener('mousemove', (e) => {
+                if (!isDown) return; // 如果沒按住左鍵就什麼都不做
+                
+                e.preventDefault(); // 避免滑鼠移動時不小心反白選取到表格文字
+                
+                const x = e.pageX - slider.offsetLeft;
+                const y = e.pageY - slider.offsetTop;
+                
+                // 計算滑動的距離，並乘以 1.5 倍提升順滑度
+                const walkX = (x - startX) * 1.5;
+                const walkY = (y - startY) * 1.5;
+                
+                // 【智慧防呆】如果滑鼠移動距離超過 5 像素，才正式判定使用者在「拖曳」
+                if (Math.abs(walkX) > 5 || Math.abs(walkY) > 5) {
+                    isDraggingTable = true;
+                }
+                
+                // 同步移動表格卷軸
+                slider.scrollLeft = scrollLeft - walkX;
+                slider.scrollTop = scrollTop - walkY;
+            });
         }
 
         // 動態更新次類別選單
@@ -488,6 +560,12 @@
         // ================== 對話框與修改刪除邏輯 ==================
 
         function openActionModal(recordId) {
+            // 【防呆攔截】如果使用者剛剛是在「拖曳滑動」報表，就消耗掉這次點擊，不彈出修改視窗
+            if (isDraggingTable) {
+                setTimeout(() => isDraggingTable = false, 50); 
+                return; 
+            }
+            
             selectedRecordForModal = records.find(r => r.id === recordId);
             if(!selectedRecordForModal) return;
 
