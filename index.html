@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>簡易記帳本</title>
+    <!-- 【雙軌並行關鍵】加入 PWA 身分證綁定 -->
     <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -96,6 +97,12 @@
                 <div id="toast-msg" class="text-center text-sm text-green-600 font-medium opacity-0 transition-opacity duration-300">
                     已成功儲存！
                 </div>
+                
+                <!-- 版本號顯示區塊 -->
+                <div class="text-center text-xs text-gray-400 mt-6 mb-2">
+                    系統版本：v1.1.0
+                </div>
+
             </section>
         </main>
 
