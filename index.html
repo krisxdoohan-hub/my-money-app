@@ -26,15 +26,26 @@
         }
         .clickable-cell { cursor: pointer; transition: background-color 0.2s; }
         .clickable-cell:active { background-color: #e0e7ff; }
+        /* 載入動畫 */
+        .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 20px; height: 20px; animation: spin 1s ease-in-out infinite; }
+        @keyframes spin { to { transform: rotate(360deg); } }
     </style>
 </head>
 <body id="body-tag" class="bg-gray-200 text-gray-800 font-sans antialiased min-h-screen flex flex-col items-center">
 
-    <!-- 加入 md:max-w-3xl lg:max-w-5xl 讓電腦版能自動變寬 -->
+    <!-- 全域載入遮罩 -->
+    <div id="loading-overlay" class="fixed inset-0 bg-indigo-900 bg-opacity-80 z-[100] hidden flex-col justify-center items-center text-white backdrop-blur-sm">
+        <div class="spinner mb-4 w-10 h-10 border-4"></div>
+        <p id="loading-text" class="font-bold tracking-wider">雲端同步中...</p>
+    </div>
+
     <div id="main-container" class="w-full max-w-md md:max-w-3xl lg:max-w-5xl bg-white h-screen shadow-lg flex flex-col relative transition-all duration-300">
         
-        <header class="bg-indigo-700 text-white p-4 text-center shadow-md z-40 flex-shrink-0">
+        <header class="bg-indigo-700 text-white p-4 text-center shadow-md z-40 flex-shrink-0 flex justify-center items-center relative">
             <h1 class="text-xl font-bold tracking-wider" id="app-title">新增記帳</h1>
+            <div id="cloud-status-icon" class="absolute right-4 text-indigo-300 transition-colors" title="雲端未連線">
+                <i class="ph ph-cloud-slash text-xl"></i>
+            </div>
         </header>
 
         <!-- 第一頁：新增記帳 -->
@@ -88,10 +99,10 @@
                 
                 <!-- 按鈕區塊 -->
                 <div class="space-y-3 pt-2">
-                    <button id="btn-save" onclick="saveRecord()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md active:transform active:scale-95">
-                        儲存紀錄
+                    <button id="btn-save" onclick="saveRecord()" class="w-full bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-3 px-4 rounded-lg transition duration-200 shadow-md active:transform active:scale-95 flex justify-center items-center gap-2">
+                        <i class="ph ph-floppy-disk text-xl"></i> 儲存紀錄
                     </button>
-                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="hidden w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition duration-200 shadow-sm active:transform active:scale-95">
+                    <button id="btn-cancel-edit" onclick="cancelEdit()" class="hidden w-full bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold py-3 px-4 rounded-lg transition duration-200 shadow-sm active:transform active:scale-95 flex justify-center items-center gap-2">
                         取消修改
                     </button>
                 </div>
@@ -102,7 +113,7 @@
                 
                 <!-- 版本號顯示區塊 -->
                 <div class="text-center text-xs text-gray-400 mt-6 mb-2">
-                    系統版本：v1.3.0
+                    系統版本：v2.0.0 (雲端同步版)
                 </div>
 
             </section>
@@ -125,7 +136,6 @@
                 </div>
             </aside>
 
-            <!-- 【電腦版滑動升級】加入 id="table-scroll-container" 與 cursor-grab 游標樣式 -->
             <div id="table-scroll-container" class="flex-1 overflow-auto bg-gray-100 relative cursor-grab">
                 <table class="border-collapse w-max min-w-full text-sm bg-white">
                     <thead id="sheet-thead" class="bg-white">
@@ -140,7 +150,6 @@
 
         <!-- 第三頁：年度總覽 -->
         <main id="page-annual" class="page-hidden flex-1 overflow-y-auto p-6 pb-24 relative bg-gray-50">
-            <!-- 加入 md:grid md:grid-cols-2 讓電腦版報表並排顯示 -->
             <div class="flex flex-col gap-6 md:grid md:grid-cols-2">
                 
                 <!-- 年份與幣別切換 -->
@@ -175,7 +184,7 @@
                     </div>
                 </div>
 
-                <!-- 類別佔比分析 (電腦版將佔據左半邊) -->
+                <!-- 類別佔比分析 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden md:col-span-1 flex flex-col h-full">
                     <div class="bg-gray-100 px-4 py-3 border-b border-gray-200 flex justify-between items-center">
                         <h3 class="font-bold text-gray-800 flex items-center gap-2">
@@ -191,7 +200,7 @@
                     </div>
                 </div>
 
-                <!-- 每月走勢分析 (電腦版將佔據右半邊) -->
+                <!-- 每月走勢分析 -->
                 <div class="bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden md:col-span-1 flex flex-col h-full">
                     <div class="bg-gray-100 px-4 py-3 border-b border-gray-200">
                         <h3 class="font-bold text-gray-800 flex items-center gap-2"><i class="ph ph-trend-up text-indigo-600 text-lg"></i> 各月支出明細 <span class="text-xs text-gray-500 font-normal ml-1">(點擊連動)</span></h3>
@@ -205,19 +214,46 @@
                     </div>
                 </div>
 
-                <!-- 資料備份與管理區塊 -->
-                <div class="bg-indigo-50 rounded-xl shadow-sm border border-indigo-100 p-4 md:col-span-2">
-                    <h3 class="font-bold text-indigo-900 flex items-center gap-2 mb-3">
-                        <i class="ph ph-database text-indigo-600 text-lg"></i> 資料備份與還原
+                <!-- ✨ V2.0 新增：雲端同步設定區 ✨ -->
+                <div class="bg-blue-50 rounded-xl shadow-sm border border-blue-200 p-4 md:col-span-2">
+                    <h3 class="font-bold text-blue-900 flex items-center gap-2 mb-3">
+                        <i class="ph ph-cloud-arrow-up text-blue-600 text-xl"></i> 雲端同步設定 (GitHub API)
                     </h3>
-                    <p class="text-xs text-indigo-700 mb-4">建議定期將資料匯出保存，換手機時可匯入還原紀錄。</p>
+                    <p class="text-xs text-blue-700 mb-3 leading-relaxed">請輸入您的 GitHub 金鑰以啟用自動同步。您的金鑰僅會保存在此裝置，不會外洩。</p>
+                    
+                    <div class="space-y-3 mb-4">
+                        <div class="flex gap-2">
+                            <input type="text" id="cfg-owner" value="krisxdoohan-hub" placeholder="GitHub 帳號" class="w-1/2 border-blue-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <input type="text" id="cfg-repo" value="my-money-app" placeholder="專案名稱" class="w-1/2 border-blue-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                        </div>
+                        <input type="password" id="cfg-token" placeholder="請貼上您的 GitHub Token (ghp_...)" class="w-full border-blue-200 rounded p-2 text-sm focus:ring-2 focus:ring-blue-500 focus:outline-none font-mono">
+                        <button onclick="saveCloudConfig()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-sm">
+                            <i class="ph ph-floppy-disk text-lg"></i> 儲存金鑰設定
+                        </button>
+                    </div>
+
+                    <div class="flex gap-2 border-t border-blue-200 pt-4">
+                        <button onclick="forceSyncDownload()" class="flex-1 bg-white hover:bg-blue-100 text-blue-700 font-bold border border-blue-300 py-2 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-xs">
+                            <i class="ph ph-download-simple text-lg"></i> ⬇️ 從雲端下載
+                        </button>
+                        <button onclick="forceSyncUpload()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-2 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-xs">
+                            <i class="ph ph-upload-simple text-lg"></i> ⬆️ 強制覆蓋雲端
+                        </button>
+                    </div>
+                </div>
+
+                <!-- 資料備份與管理區塊 (保留手動匯出) -->
+                <div class="bg-gray-50 rounded-xl shadow-sm border border-gray-200 p-4 md:col-span-2">
+                    <h3 class="font-bold text-gray-700 flex items-center gap-2 mb-3">
+                        <i class="ph ph-hard-drives text-gray-500 text-lg"></i> 本機手動備份
+                    </h3>
                     <div class="flex gap-2">
-                        <button onclick="exportData()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-sm">
-                            <i class="ph ph-export text-lg"></i> 匯出備份
+                        <button onclick="exportData()" class="flex-1 bg-gray-600 hover:bg-gray-700 text-white font-bold py-2 px-3 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-sm">
+                            <i class="ph ph-export text-lg"></i> 匯出 JSON
                         </button>
                         <input type="file" id="import-file" accept=".json" class="hidden" onchange="importData(event)">
-                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-white hover:bg-gray-50 text-indigo-600 font-bold border border-indigo-200 py-2 px-3 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-sm">
-                            <i class="ph ph-download-simple text-lg"></i> 匯入還原
+                        <button onclick="document.getElementById('import-file').click()" class="flex-1 bg-white hover:bg-gray-100 text-gray-700 font-bold border border-gray-300 py-2 px-3 rounded-lg flex items-center justify-center gap-1 shadow-sm active:scale-95 transition text-sm">
+                            <i class="ph ph-download-simple text-lg"></i> 匯入 JSON
                         </button>
                     </div>
                     <div id="backup-msg" class="text-center text-sm font-medium opacity-0 transition-opacity duration-300 mt-2"></div>
@@ -270,26 +306,30 @@
     </div>
 
     <script>
-        // ================== PWA Service Worker 註冊 (離線快取引擎) ==================
-        // 進版提醒：這裡也同步推進至 v1.3.0 囉！
+        // ================== PWA Service Worker 註冊 ==================
         if ('serviceWorker' in navigator) {
             window.addEventListener('load', () => {
-                // 向瀏覽器註冊同目錄下的 sw.js 作為離線引擎
-                navigator.serviceWorker.register('./sw.js')
-                    .then(registration => {
-                        console.log('離線快取引擎註冊成功！', registration.scope);
-                    })
-                    .catch(error => {
-                        console.log('離線快取引擎註冊失敗：', error);
-                    });
+                navigator.serviceWorker.register('./sw.js').catch(err => console.log('SW Error:', err));
             });
         }
 
+        // ================== 全域變數與核心設定 ==================
         let records = [];
         let currentViewDate = new Date();
         let currentAnnualYear = new Date().getFullYear();
+        let isDraggingTable = false; 
+        let editingRecordId = null;
+        let selectedRecordForModal = null; 
         
-        // 定義主從類別的對應關係
+        // 雲端同步設定 (不寫死金鑰，靠 LocalStorage 儲存)
+        let cloudConfig = {
+            owner: 'krisxdoohan-hub',
+            repo: 'my-money-app',
+            token: '',
+            path: 'data.json',
+            lastSha: null
+        };
+
         const categoryMap = {
             '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'],
             '交通': ['加油', '車票', '其他'],
@@ -298,124 +338,258 @@
             '其他': []
         };
 
-        // 全面擴充餐點的 5 大細項，動態表格將以此列表為準生成
         const categoriesList = [
-            '餐點-早餐', 
-            '餐點-午餐', 
-            '餐點-晚餐', 
-            '餐點-飲品', 
-            '餐點-其他', 
-            '交通-加油',
-            '交通-車票',
-            '交通-其他',
-            '娛樂', 
-            '生活雜物購買', 
-            '其他'
+            '餐點-早餐', '餐點-午餐', '餐點-晚餐', '餐點-飲品', '餐點-其他', 
+            '交通-加油', '交通-車票', '交通-其他', '娛樂', '生活雜物購買', '其他'
         ];
-        
-        let editingRecordId = null;
-        let selectedRecordForModal = null; 
-        
-        // 【防誤觸機制】標記目前是否正在用滑鼠拖曳報表
-        let isDraggingTable = false; 
 
-        function init() {
+        // ================== 雲端同步核心引擎 (GitHub API) ==================
+
+        // 中文安全轉換的 Base64 引擎
+        function utf8_to_b64(str) {
+            return window.btoa(unescape(encodeURIComponent(str)));
+        }
+        function b64_to_utf8(str) {
+            return decodeURIComponent(escape(window.atob(str)));
+        }
+
+        function showLoading(text) {
+            document.getElementById('loading-text').innerText = text;
+            document.getElementById('loading-overlay').classList.replace('hidden', 'flex');
+        }
+        function hideLoading() {
+            document.getElementById('loading-overlay').classList.replace('flex', 'hidden');
+        }
+
+        function updateCloudIcon(isSuccess) {
+            const icon = document.getElementById('cloud-status-icon');
+            if (isSuccess) {
+                icon.innerHTML = '<i class="ph ph-cloud-check text-2xl"></i>';
+                icon.classList.replace('text-indigo-300', 'text-green-300');
+                icon.title = "雲端同步成功";
+            } else {
+                icon.innerHTML = '<i class="ph ph-cloud-warning text-2xl"></i>';
+                icon.classList.replace('text-green-300', 'text-red-300');
+                icon.title = "雲端同步失敗/未設定";
+            }
+        }
+
+        // 儲存金鑰設定至本地
+        function saveCloudConfig() {
+            cloudConfig.owner = document.getElementById('cfg-owner').value.trim();
+            cloudConfig.repo = document.getElementById('cfg-repo').value.trim();
+            cloudConfig.token = document.getElementById('cfg-token').value.trim();
+            localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig));
+            showBackupMessage("金鑰設定已成功儲存至本機！");
+            
+            // 儲存後立即嘗試連線下載一次
+            if(cloudConfig.token) forceSyncDownload();
+        }
+
+        // 載入本地金鑰設定
+        function loadCloudConfig() {
+            const saved = localStorage.getItem('moneyAppCloudConfig');
+            if (saved) {
+                const parsed = JSON.parse(saved);
+                cloudConfig.owner = parsed.owner || 'krisxdoohan-hub';
+                cloudConfig.repo = parsed.repo || 'my-money-app';
+                cloudConfig.token = parsed.token || '';
+                cloudConfig.lastSha = parsed.lastSha || null;
+                
+                document.getElementById('cfg-owner').value = cloudConfig.owner;
+                document.getElementById('cfg-repo').value = cloudConfig.repo;
+                document.getElementById('cfg-token').value = cloudConfig.token;
+            }
+        }
+
+        // 核心API：抓取 GitHub 檔案
+        async function fetchGitHubData() {
+            if (!cloudConfig.token) return null;
+            const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}`;
+            try {
+                const res = await fetch(url, {
+                    headers: {
+                        'Authorization': `token ${cloudConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json'
+                    }
+                });
+                if (res.status === 404) return { isNew: true }; // 檔案不存在，代表是全新的儲存庫
+                if (!res.ok) throw new Error(`API 錯誤: ${res.status}`);
+                
+                const data = await res.json();
+                cloudConfig.lastSha = data.sha; // 紀錄最新指紋，供覆蓋時驗證
+                localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig));
+                
+                const contentStr = b64_to_utf8(data.content);
+                return { isNew: false, records: JSON.parse(contentStr) };
+            } catch (err) {
+                console.error("下載失敗:", err);
+                return { error: err.message };
+            }
+        }
+
+        // 核心API：覆蓋上傳至 GitHub
+        async function putGitHubData() {
+            if (!cloudConfig.token) return false;
+            const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}`;
+            
+            // 如果我們不知道檔案現在的 SHA，必須先抓一次，否則會發生 Conflict
+            if (!cloudConfig.lastSha) {
+                const currentData = await fetchGitHubData();
+                if (currentData && currentData.error) return false;
+            }
+
+            const payload = {
+                message: `Auto sync from App: ${new Date().toLocaleString()}`,
+                content: utf8_to_b64(JSON.stringify(records)),
+                sha: cloudConfig.lastSha // 如果是第一次新增(404)，此欄位為 null 也可通過
+            };
+
+            try {
+                const res = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Authorization': `token ${cloudConfig.token}`,
+                        'Accept': 'application/vnd.github.v3+json',
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(payload)
+                });
+                
+                if (!res.ok) throw new Error(`上傳失敗: ${res.status}`);
+                const data = await res.json();
+                cloudConfig.lastSha = data.content.sha; // 更新最新的指紋
+                localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig));
+                updateCloudIcon(true);
+                return true;
+            } catch (err) {
+                console.error("上傳失敗:", err);
+                updateCloudIcon(false);
+                return false;
+            }
+        }
+
+        // 手動按鈕：強制下載覆蓋本機
+        async function forceSyncDownload() {
+            if (!cloudConfig.token) { alert("請先輸入並儲存 GitHub 金鑰！"); return; }
+            showLoading("從雲端獲取最新資料中...");
+            const result = await fetchGitHubData();
+            hideLoading();
+            
+            if (result && result.records) {
+                records = result.records;
+                localStorage.setItem('expenseRecords', JSON.stringify(records));
+                updateCloudIcon(true);
+                updateCurrencyFilterOptions();
+                updateAnnualOverview();
+                showBackupMessage("下載成功！本機已更新。");
+            } else if (result && result.isNew) {
+                showBackupMessage("雲端尚未建立檔案，請先執行強制上傳。");
+                updateCloudIcon(false);
+            } else {
+                showBackupMessage("下載失敗，請檢查金鑰或網路連線。", false);
+                updateCloudIcon(false);
+            }
+        }
+
+        // 手動按鈕：強制上傳覆蓋雲端
+        async function forceSyncUpload() {
+            if (!cloudConfig.token) { alert("請先輸入並儲存 GitHub 金鑰！"); return; }
+            showLoading("備份至雲端中...");
+            const success = await putGitHubData();
+            hideLoading();
+            if (success) {
+                showBackupMessage("強制上傳成功！雲端已更新。");
+            } else {
+                showBackupMessage("上傳失敗，可能發生衝突，建議先下載最新版。", false);
+            }
+        }
+
+        // 背景靜默上傳 (用於每次記帳或刪除後自動觸發)
+        async function backgroundSyncUpload() {
+            if (!cloudConfig.token) return;
+            const icon = document.getElementById('cloud-status-icon');
+            icon.innerHTML = '<div class="spinner w-4 h-4 border-2 mx-auto"></div>';
+            await putGitHubData();
+        }
+
+        // ================== 初始化與介面邏輯 ==================
+
+        async function init() {
+            // 載入本地金鑰
+            loadCloudConfig();
+
+            // 1. 先讀取本地的 localStorage
             const savedData = localStorage.getItem('expenseRecords');
             if (savedData) {
                 records = JSON.parse(savedData);
-                // 確保舊資料擁有預設幣別，且自動將舊版的「餐點」升級為「餐點-其他」，防範資料在圖表上消失
                 records.forEach(r => { 
                     if(!r.currency) r.currency = 'TWD'; 
                     if(r.category === '餐點') r.category = '餐點-其他';
                     if(r.category === '交通') r.category = '交通-其他';
                 });
             }
+
+            // 2. 如果有金鑰，在啟動時自動於背景嘗試抓取雲端最新資料
+            if (cloudConfig.token) {
+                const result = await fetchGitHubData();
+                if (result && result.records) {
+                    records = result.records;
+                    localStorage.setItem('expenseRecords', JSON.stringify(records));
+                    updateCloudIcon(true);
+                } else {
+                    updateCloudIcon(false);
+                }
+            }
+
             const todayStr = getLocalYMD(new Date());
             document.getElementById('input-date').value = todayStr;
             updateCurrencyFilterOptions();
-            updateSubCategories(); // 初始化次類別選單
-            
-            // 啟動電腦版專用的滑鼠拖曳引擎
+            updateSubCategories(); 
             setupTableScroll(); 
         }
 
-        // ================== 電腦版滑鼠拖曳引擎 (Drag-to-Scroll) ==================
+        // ================== 電腦版滑鼠拖曳引擎 ==================
         function setupTableScroll() {
             const slider = document.getElementById('table-scroll-container');
             if(!slider) return;
-            
             let isDown = false;
-            let startX;
-            let scrollLeft;
-            let startY;
-            let scrollTop;
+            let startX, scrollLeft, startY, scrollTop;
 
-            // 當滑鼠按下時
             slider.addEventListener('mousedown', (e) => {
                 isDown = true;
-                isDraggingTable = false; // 初始按下時還不算拖曳
-                
-                // 改變游標變成抓緊的狀態
+                isDraggingTable = false; 
                 slider.classList.add('cursor-grabbing');
                 slider.classList.remove('cursor-grab');
-                
-                // 記錄滑鼠當下的起始位置與卷軸位置
                 startX = e.pageX - slider.offsetLeft;
                 startY = e.pageY - slider.offsetTop;
                 scrollLeft = slider.scrollLeft;
                 scrollTop = slider.scrollTop;
             });
-            
-            // 當滑鼠離開表格區域時
-            slider.addEventListener('mouseleave', () => {
-                isDown = false;
-                slider.classList.add('cursor-grab');
-                slider.classList.remove('cursor-grabbing');
-            });
-            
-            // 當滑鼠按鍵放開時
-            slider.addEventListener('mouseup', () => {
-                isDown = false;
-                slider.classList.add('cursor-grab');
-                slider.classList.remove('cursor-grabbing');
-            });
-            
-            // 當滑鼠移動時 (核心滑動邏輯)
+            slider.addEventListener('mouseleave', () => { isDown = false; slider.classList.add('cursor-grab'); slider.classList.remove('cursor-grabbing'); });
+            slider.addEventListener('mouseup', () => { isDown = false; slider.classList.add('cursor-grab'); slider.classList.remove('cursor-grabbing'); });
             slider.addEventListener('mousemove', (e) => {
-                if (!isDown) return; // 如果沒按住左鍵就什麼都不做
-                
-                e.preventDefault(); // 避免滑鼠移動時不小心反白選取到表格文字
-                
+                if (!isDown) return; 
+                e.preventDefault(); 
                 const x = e.pageX - slider.offsetLeft;
                 const y = e.pageY - slider.offsetTop;
-                
-                // 計算滑動的距離，並乘以 1.5 倍提升順滑度
                 const walkX = (x - startX) * 1.5;
                 const walkY = (y - startY) * 1.5;
-                
-                // 【智慧防呆】如果滑鼠移動距離超過 5 像素，才正式判定使用者在「拖曳」
-                if (Math.abs(walkX) > 5 || Math.abs(walkY) > 5) {
-                    isDraggingTable = true;
-                }
-                
-                // 同步移動表格卷軸
+                if (Math.abs(walkX) > 5 || Math.abs(walkY) > 5) isDraggingTable = true;
                 slider.scrollLeft = scrollLeft - walkX;
                 slider.scrollTop = scrollTop - walkY;
             });
         }
 
-        // 動態更新次類別選單
+        // ================== 表單與增刪改查 ==================
         function updateSubCategories(defaultSub = null) {
             const mainCat = document.getElementById('input-category-main').value;
             const subSelect = document.getElementById('input-category-sub');
             const subItems = categoryMap[mainCat] || [];
-
             if (subItems.length > 0) {
                 subSelect.classList.remove('hidden');
                 subSelect.innerHTML = subItems.map(item => `<option value="${item}">${item}</option>`).join('');
-                if (defaultSub && subItems.includes(defaultSub)) {
-                    subSelect.value = defaultSub;
-                }
+                if (defaultSub && subItems.includes(defaultSub)) subSelect.value = defaultSub;
             } else {
                 subSelect.classList.add('hidden');
                 subSelect.innerHTML = '';
@@ -445,7 +619,6 @@
 
             if (tabName === 'add') {
                 pageAdd.classList.remove('page-hidden');
-                // 動態加回電腦版寬度控制
                 mainContainer.classList.remove('max-w-full');
                 mainContainer.classList.add('max-w-md', 'md:max-w-3xl', 'lg:max-w-5xl', 'w-full');
                 bodyTag.classList.remove('overview-mode');
@@ -455,7 +628,6 @@
             } else if (tabName === 'overview') {
                 pageOverview.classList.remove('page-hidden');
                 pageOverview.classList.add('flex-active');
-                // 報表頁面完全解除寬度限制，佔滿全螢幕
                 mainContainer.classList.remove('max-w-md', 'md:max-w-3xl', 'lg:max-w-5xl');
                 mainContainer.classList.add('max-w-full', 'w-full');
                 bodyTag.classList.add('overview-mode'); 
@@ -465,7 +637,6 @@
                 updateOverview();
             } else if (tabName === 'annual') {
                 pageAnnual.classList.remove('page-hidden');
-                // 動態加回電腦版寬度控制
                 mainContainer.classList.remove('max-w-full');
                 mainContainer.classList.add('max-w-md', 'md:max-w-3xl', 'lg:max-w-5xl', 'w-full');
                 bodyTag.classList.remove('overview-mode'); 
@@ -493,13 +664,12 @@
             }
         }
 
-        function saveRecord() {
+        async function saveRecord() {
             const date = document.getElementById('input-date').value;
             let note = document.getElementById('input-note').value;
             const amount = document.getElementById('input-amount').value;
             const currency = document.getElementById('input-currency').value;
             
-            // 組合大類與細項字串
             const mainCat = document.getElementById('input-category-main').value;
             const subSelect = document.getElementById('input-category-sub');
             let category = mainCat;
@@ -515,49 +685,34 @@
             if (editingRecordId) {
                 const index = records.findIndex(r => r.id === editingRecordId);
                 if (index !== -1) {
-                    records[index] = {
-                        id: editingRecordId,
-                        date: date,
-                        category: category,
-                        note: note || "無備註",
-                        amount: parseFloat(amount),
-                        currency: currency
-                    };
+                    records[index] = { id: editingRecordId, date: date, category: category, note: note || "無備註", amount: parseFloat(amount), currency: currency };
                 }
                 cancelEdit(false);
                 document.getElementById('toast-msg').innerText = "已成功更新！";
             } else {
-                records.push({
-                    id: Date.now().toString(),
-                    date: date,
-                    category: category,
-                    note: note || "無備註",
-                    amount: parseFloat(amount),
-                    currency: currency
-                });
+                records.push({ id: Date.now().toString(), date: date, category: category, note: note || "無備註", amount: parseFloat(amount), currency: currency });
                 document.getElementById('toast-msg').innerText = "已成功儲存！";
             }
 
+            // 儲存本地
             localStorage.setItem('expenseRecords', JSON.stringify(records));
-            
             currentViewDate = new Date(date);
             currentAnnualYear = currentViewDate.getFullYear();
-
             document.getElementById('input-note').value = '';
             document.getElementById('input-amount').value = '';
 
             const toast = document.getElementById('toast-msg');
             toast.style.opacity = '1';
             setTimeout(() => { toast.style.opacity = '0'; }, 2000);
+
+            // 【雲端機制】觸發背景上傳
+            backgroundSyncUpload();
         }
 
-        // ================== 共用加總邏輯 ==================
+        // ================== 月報表與年報表渲染 ==================
         function sumByCurrency(recs) {
             const sums = {};
-            recs.forEach(r => {
-                const c = r.currency || 'TWD';
-                sums[c] = (sums[c] || 0) + r.amount;
-            });
+            recs.forEach(r => { const c = r.currency || 'TWD'; sums[c] = (sums[c] || 0) + r.amount; });
             return sums;
         }
 
@@ -567,22 +722,13 @@
             return keys.map(k => `<span class="whitespace-nowrap"><span class="text-xs text-gray-500 mr-1">${k}</span>${sums[k].toLocaleString()}</span>`).join('<br>');
         }
 
-        // ================== 對話框與修改刪除邏輯 ==================
-
         function openActionModal(recordId) {
-            // 【防呆攔截】如果使用者剛剛是在「拖曳滑動」報表，就消耗掉這次點擊，不彈出修改視窗
-            if (isDraggingTable) {
-                setTimeout(() => isDraggingTable = false, 50); 
-                return; 
-            }
-            
+            if (isDraggingTable) { setTimeout(() => isDraggingTable = false, 50); return; }
             selectedRecordForModal = records.find(r => r.id === recordId);
             if(!selectedRecordForModal) return;
-
             document.getElementById('modal-info-cat').innerText = selectedRecordForModal.category;
             document.getElementById('modal-info-note').innerText = selectedRecordForModal.note;
             document.getElementById('modal-info-amount').innerText = `${selectedRecordForModal.currency || 'TWD'} ${selectedRecordForModal.amount}`;
-            
             document.getElementById('action-modal').classList.remove('hidden');
         }
 
@@ -591,47 +737,41 @@
             selectedRecordForModal = null;
         }
 
-        function executeDelete() {
+        async function executeDelete() {
             if(!selectedRecordForModal) return;
             records = records.filter(r => r.id !== selectedRecordForModal.id);
             localStorage.setItem('expenseRecords', JSON.stringify(records));
             closeModal();
             updateOverview(); 
+            // 觸發背景上傳
+            backgroundSyncUpload();
         }
 
         function executeEdit() {
             if(!selectedRecordForModal) return;
-            
             const fullCat = selectedRecordForModal.category;
             let mainCat = fullCat;
             let subCat = null;
-            
-            // 將歷史字串 (例如 餐點-早餐) 拆解還原到兩層選單
             if (fullCat.includes('-')) {
                 const parts = fullCat.split('-');
-                mainCat = parts[0];
-                subCat = parts[1];
+                mainCat = parts[0]; subCat = parts[1];
             } else if (categoryMap[fullCat] && categoryMap[fullCat].length > 0) {
                 subCat = '其他';
             }
-
             document.getElementById('input-date').value = selectedRecordForModal.date;
             document.getElementById('input-category-main').value = mainCat;
-            updateSubCategories(subCat); // 觸發連動並帶入預設值
-            
+            updateSubCategories(subCat); 
             document.getElementById('input-note').value = selectedRecordForModal.note;
             document.getElementById('input-amount').value = selectedRecordForModal.amount;
             document.getElementById('input-currency').value = selectedRecordForModal.currency || 'TWD';
-            
             editingRecordId = selectedRecordForModal.id;
             
             const btnSave = document.getElementById('btn-save');
-            btnSave.innerText = "儲存修改";
+            btnSave.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> 儲存修改';
             btnSave.classList.replace('bg-indigo-600', 'bg-yellow-500');
             btnSave.classList.replace('hover:bg-indigo-700', 'hover:bg-yellow-600');
             document.getElementById('btn-cancel-edit').classList.remove('hidden');
             document.getElementById('tab-add-text').innerText = "編輯中";
-
             closeModal();
             switchTab('add');
         }
@@ -641,21 +781,17 @@
             if (clearInputs) {
                 document.getElementById('input-note').value = '';
                 document.getElementById('input-amount').value = '';
-                // 恢復預設的第一個主類別與次類別狀態
                 document.getElementById('input-category-main').selectedIndex = 0;
                 updateSubCategories();
             }
-            
             const btnSave = document.getElementById('btn-save');
-            btnSave.innerText = "儲存紀錄";
+            btnSave.innerHTML = '<i class="ph ph-floppy-disk text-xl"></i> 儲存紀錄';
             btnSave.classList.replace('bg-yellow-500', 'bg-indigo-600');
             btnSave.classList.replace('hover:bg-yellow-600', 'hover:bg-indigo-700');
             document.getElementById('btn-cancel-edit').classList.add('hidden');
             document.getElementById('tab-add-text').innerText = "記帳";
             document.getElementById('app-title').innerText = "新增記帳";
         }
-
-        // ================== 月份切換與圖表重繪 ==================
 
         function changeMonth() {
             const monthVal = document.getElementById('month-selector').value;
@@ -675,10 +811,8 @@
             const monthRecords = records.filter(r => r.date.startsWith(monthPrefix));
             document.getElementById('month-selector').value = monthPrefix;
 
-            // 構建左側統計區 
             const catContainer = document.getElementById('summary-category-container');
             let catTableHtml = '';
-            
             const usedCurrencies = [...new Set(monthRecords.map(r => r.currency || 'TWD'))];
             
             if (usedCurrencies.length === 0) {
@@ -687,56 +821,24 @@
                 usedCurrencies.forEach(curr => {
                     const currRecords = monthRecords.filter(r => (r.currency || 'TWD') === curr);
                     let currTotal = 0;
-                    
-                    catTableHtml += `
-                        <div class="bg-indigo-50/50 border-b border-indigo-100 px-3 py-1 font-bold text-indigo-900 text-sm">
-                            幣別: ${curr}
-                        </div>
-                        <table class="w-full text-sm text-left border-collapse mb-2">
-                            <tbody class="divide-y divide-gray-100">
-                    `;
-                    
+                    catTableHtml += `<div class="bg-indigo-50/50 border-b border-indigo-100 px-3 py-1 font-bold text-indigo-900 text-sm">幣別: ${curr}</div><table class="w-full text-sm text-left border-collapse mb-2"><tbody class="divide-y divide-gray-100">`;
                     categoriesList.forEach(cat => {
                         const amount = currRecords.filter(r => r.category === cat).reduce((sum, r) => sum + r.amount, 0);
                         currTotal += amount;
-                        
-                        // 隱藏在該幣別下金額為0的類別以節省空間
                         if(amount > 0) {
-                            // 將主副分類顯示得更簡潔
                             let displayCat = cat;
                             if (cat.startsWith('餐點-')) displayCat = cat.replace('餐點-', '餐點 (') + ')';
                             if (cat.startsWith('交通-')) displayCat = cat.replace('交通-', '交通 (') + ')';
-                            
-                            catTableHtml += `
-                                <tr>
-                                    <td class="px-3 py-2 border-r border-gray-100 text-center text-gray-700 w-1/2">${displayCat}</td>
-                                    <td class="px-3 py-2 text-right font-medium text-gray-900 w-1/2">${amount.toLocaleString()}</td>
-                                </tr>
-                            `;
+                            catTableHtml += `<tr><td class="px-3 py-2 border-r border-gray-100 text-center text-gray-700 w-1/2">${displayCat}</td><td class="px-3 py-2 text-right font-medium text-gray-900 w-1/2">${amount.toLocaleString()}</td></tr>`;
                         }
                     });
-                    
-                    catTableHtml += `
-                            </tbody>
-                            <tfoot class="bg-indigo-50">
-                                <tr>
-                                    <td class="px-3 py-2 border-r border-indigo-200 font-bold text-gray-800 text-center">合計</td>
-                                    <td class="px-3 py-2 font-bold text-indigo-800 text-right">${currTotal.toLocaleString()}</td>
-                                </tr>
-                            </tfoot>
-                        </table>
-                    `;
+                    catTableHtml += `</tbody><tfoot class="bg-indigo-50"><tr><td class="px-3 py-2 border-r border-indigo-200 font-bold text-gray-800 text-center">合計</td><td class="px-3 py-2 font-bold text-indigo-800 text-right">${currTotal.toLocaleString()}</td></tr></tfoot></table>`;
                 });
             }
             catContainer.innerHTML = catTableHtml;
 
-            // 構建右側 Excel 表格
             const thead = document.getElementById('sheet-thead');
-            let dayRowHtml = `<tr class="h-[44px]">
-                <th rowspan="2" class="sticky left-0 top-0 z-50 bg-indigo-800 text-white p-2 min-w-[100px] max-w-[120px] border border-indigo-900 align-middle text-center shadow-[2px_2px_5px_rgba(0,0,0,0.1)]">
-                    <span class="block">每日的紀錄</span>
-                    <span class="text-xs text-indigo-300 font-normal">類別 / 節日</span>
-                </th>`;
+            let dayRowHtml = `<tr class="h-[44px]"><th rowspan="2" class="sticky left-0 top-0 z-50 bg-indigo-800 text-white p-2 min-w-[100px] max-w-[120px] border border-indigo-900 align-middle text-center shadow-[2px_2px_5px_rgba(0,0,0,0.1)]"><span class="block">每日的紀錄</span><span class="text-xs text-indigo-300 font-normal">類別 / 節日</span></th>`;
             let subRowHtml = `<tr class="h-[36px]">`;
 
             for (let d = 1; d <= daysInMonth; d++) {
@@ -746,17 +848,10 @@
                 const isWeekend = (dateObj.getDay() === 0 || dateObj.getDay() === 6);
                 const colorClass = isWeekend ? 'text-red-600' : 'text-gray-800';
 
-                dayRowHtml += `
-                    <th colspan="2" class="sticky top-0 z-40 bg-white border border-gray-300 px-2 py-1 text-center whitespace-nowrap shadow-sm">
-                        <span class="text-lg font-bold ${colorClass}">${d}</span> 
-                        <span class="text-sm ${colorClass}">週${wd}</span>
-                    </th>`;
-                subRowHtml += `
-                    <th class="sticky top-[44px] z-30 bg-gray-100 border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-600 shadow-sm cell-note">品名</th>
-                    <th class="sticky top-[44px] z-30 bg-gray-100 border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-600 shadow-sm cell-amount">金額</th>`;
+                dayRowHtml += `<th colspan="2" class="sticky top-0 z-40 bg-white border border-gray-300 px-2 py-1 text-center whitespace-nowrap shadow-sm"><span class="text-lg font-bold ${colorClass}">${d}</span> <span class="text-sm ${colorClass}">週${wd}</span></th>`;
+                subRowHtml += `<th class="sticky top-[44px] z-30 bg-gray-100 border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-600 shadow-sm cell-note">品名</th><th class="sticky top-[44px] z-30 bg-gray-100 border border-gray-300 px-2 py-1 text-center text-xs font-medium text-gray-600 shadow-sm cell-amount">金額</th>`;
             }
-            dayRowHtml += `</tr>`;
-            subRowHtml += `</tr>`;
+            dayRowHtml += `</tr>`; subRowHtml += `</tr>`;
             thead.innerHTML = dayRowHtml + subRowHtml;
 
             const tbody = document.getElementById('sheet-tbody');
@@ -765,7 +860,6 @@
             categoriesList.forEach(cat => {
                 let maxRows = 1; 
                 const categoryRecordsByDay = {};
-
                 for (let d = 1; d <= daysInMonth; d++) {
                     const dateStr = `${monthPrefix}-${String(d).padStart(2, '0')}`;
                     const dailyCatRecords = monthRecords.filter(r => r.date === dateStr && r.category === cat);
@@ -774,47 +868,32 @@
                 }
                 
                 let displayCat = cat;
-                if (cat.startsWith('餐點-')) {
-                    displayCat = cat.replace('餐點-', '餐點<br><span class="text-xs font-normal text-gray-500">(') + ')</span>';
-                } else if (cat.startsWith('交通-')) {
-                    displayCat = cat.replace('交通-', '交通<br><span class="text-xs font-normal text-gray-500">(') + ')</span>';
-                }
+                if (cat.startsWith('餐點-')) displayCat = cat.replace('餐點-', '餐點<br><span class="text-xs font-normal text-gray-500">(') + ')</span>';
+                else if (cat.startsWith('交通-')) displayCat = cat.replace('交通-', '交通<br><span class="text-xs font-normal text-gray-500">(') + ')</span>';
 
                 for (let i = 0; i < maxRows; i++) {
                     tbodyHtml += `<tr>`;
-                    if (i === 0) {
-                        tbodyHtml += `<td rowspan="${maxRows}" class="sticky left-0 z-20 bg-indigo-50 border border-gray-300 p-2 font-bold text-gray-800 text-center align-middle shadow-[2px_0_5px_rgba(0,0,0,0.05)] leading-tight">${displayCat}</td>`;
-                    }
+                    if (i === 0) tbodyHtml += `<td rowspan="${maxRows}" class="sticky left-0 z-20 bg-indigo-50 border border-gray-300 p-2 font-bold text-gray-800 text-center align-middle shadow-[2px_0_5px_rgba(0,0,0,0.05)] leading-tight">${displayCat}</td>`;
                     for (let d = 1; d <= daysInMonth; d++) {
                         const recs = categoryRecordsByDay[d];
                         const rec = recs[i];
-                        
                         if (rec) {
-                            tbodyHtml += `
-                                <td onclick="openActionModal('${rec.id}')" class="border border-gray-300 px-2 py-1 text-sm text-gray-700 truncate cell-note bg-white clickable-cell" title="點擊修改">${rec.note}</td>
-                                <td onclick="openActionModal('${rec.id}')" class="border border-gray-300 px-2 py-1 text-sm text-right text-gray-900 bg-white cell-amount clickable-cell" title="點擊修改">
-                                    <span class="text-xs text-gray-500 mr-1">${rec.currency || 'TWD'}</span>${rec.amount.toLocaleString()}
-                                </td>`;
+                            tbodyHtml += `<td onclick="openActionModal('${rec.id}')" class="border border-gray-300 px-2 py-1 text-sm text-gray-700 truncate cell-note bg-white clickable-cell" title="點擊修改">${rec.note}</td><td onclick="openActionModal('${rec.id}')" class="border border-gray-300 px-2 py-1 text-sm text-right text-gray-900 bg-white cell-amount clickable-cell" title="點擊修改"><span class="text-xs text-gray-500 mr-1">${rec.currency || 'TWD'}</span>${rec.amount.toLocaleString()}</td>`;
                         } else {
-                            tbodyHtml += `
-                                <td class="border border-gray-200 px-2 py-1 bg-white cell-note"></td>
-                                <td class="border border-gray-200 px-2 py-1 bg-white cell-amount"></td>`;
+                            tbodyHtml += `<td class="border border-gray-200 px-2 py-1 bg-white cell-note"></td><td class="border border-gray-200 px-2 py-1 bg-white cell-amount"></td>`;
                         }
                     }
                     tbodyHtml += `</tr>`;
                 }
 
                 const displayTotalCat = cat.replace('餐點-', '').replace('交通-', '');
-                tbodyHtml += `<tr class="bg-yellow-50">`;
-                tbodyHtml += `<td class="sticky left-0 z-20 bg-yellow-100 border border-gray-300 p-1 font-medium text-gray-700 text-center text-xs shadow-[2px_0_5px_rgba(0,0,0,0.05)]">${displayTotalCat} 小計</td>`;
-                
+                tbodyHtml += `<tr class="bg-yellow-50"><td class="sticky left-0 z-20 bg-yellow-100 border border-gray-300 p-1 font-medium text-gray-700 text-center text-xs shadow-[2px_0_5px_rgba(0,0,0,0.05)]">${displayTotalCat} 小計</td>`;
                 for (let d = 1; d <= daysInMonth; d++) {
                     const dailySums = sumByCurrency(categoryRecordsByDay[d]);
                     tbodyHtml += `<td colspan="2" class="border border-gray-300 px-2 py-1 text-sm text-right text-indigo-700 font-bold bg-yellow-50/50 align-top">${formatCurrencySums(dailySums, '')}</td>`;
                 }
                 tbodyHtml += `</tr>`;
             });
-
             tbody.innerHTML = tbodyHtml;
         }
 
@@ -825,36 +904,23 @@
             return `${year}-${month}-${day}`;
         }
 
-        // ================== 年度總覽邏輯 ==================
-
         let selectedAnnualMonth = null; 
 
         function updateCurrencyFilterOptions() {
             const filter = document.getElementById('annual-currency-filter');
             const usedCurrencies = [...new Set(records.map(r => r.currency || 'TWD'))];
-            
             if(usedCurrencies.length === 0) usedCurrencies.push('TWD');
-            
             const currentSelection = filter.value;
             filter.innerHTML = usedCurrencies.map(c => `<option value="${c}">${c}</option>`).join('');
-            
-            if(usedCurrencies.includes(currentSelection)) {
-                filter.value = currentSelection;
-            } else {
-                filter.value = usedCurrencies[0];
-            }
+            if(usedCurrencies.includes(currentSelection)) filter.value = currentSelection;
+            else filter.value = usedCurrencies[0];
         }
 
-        function changeAnnualYear(delta) {
-            currentAnnualYear += delta;
-            selectedAnnualMonth = null; 
-            updateAnnualOverview();
-        }
+        function changeAnnualYear(delta) { currentAnnualYear += delta; selectedAnnualMonth = null; updateAnnualOverview(); }
 
         function updateAnnualOverview() {
             document.getElementById('display-annual-year').innerText = `${currentAnnualYear} 年`;
             const activeCurrency = document.getElementById('annual-currency-filter').value;
-            
             const yearPrefix = currentAnnualYear.toString();
             const yearRecords = records.filter(r => r.date.startsWith(yearPrefix) && (r.currency || 'TWD') === activeCurrency);
 
@@ -891,64 +957,33 @@
                 resetBtn.classList.add('hidden');
             }
 
-            targetRecords.forEach(r => {
-                displayTotal += r.amount;
-            });
-
+            targetRecords.forEach(r => { displayTotal += r.amount; });
             let catHtml = '';
 
-            // 依照主從類別 (categoryMap) 進行分層統計與渲染
             for (const mainCat in categoryMap) {
                 const subCats = categoryMap[mainCat];
                 let mainTotal = 0;
                 const subTotals = {};
-
                 if (subCats.length > 0) {
-                    // 若有細項，分別加總細項金額
                     subCats.forEach(sub => {
                         const fullCatName = `${mainCat}-${sub}`;
                         const amount = targetRecords.filter(r => r.category === fullCatName).reduce((sum, r) => sum + r.amount, 0);
-                        subTotals[sub] = amount;
-                        mainTotal += amount;
+                        subTotals[sub] = amount; mainTotal += amount;
                     });
                 } else {
-                    // 若無細項 (如:娛樂)，直接加總主類別金額
                     mainTotal = targetRecords.filter(r => r.category === mainCat).reduce((sum, r) => sum + r.amount, 0);
                 }
 
-                // 只有當該主類別有開銷時才繪製區塊
                 if (mainTotal > 0) {
                     const mainPercentage = displayTotal === 0 ? 0 : Math.round((mainTotal / displayTotal) * 100);
-                    
-                    catHtml += `
-                        <div class="mb-5 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm">
-                            <div class="flex justify-between text-sm font-bold text-indigo-900 mb-1 pb-1">
-                                <span>${mainCat} <span class="text-xs text-indigo-400 ml-1">(${mainPercentage}%)</span></span>
-                                <span>${mainTotal.toLocaleString()}</span>
-                            </div>
-                            <div class="w-full bg-gray-200 rounded-full h-2 mb-3 shadow-inner">
-                                <div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: ${mainPercentage}%"></div>
-                            </div>
-                    `;
-
-                    // 渲染內縮的次類別 (若存在且有開銷)
+                    catHtml += `<div class="mb-5 bg-gray-50 p-3 rounded-xl border border-gray-100 shadow-sm"><div class="flex justify-between text-sm font-bold text-indigo-900 mb-1 pb-1"><span>${mainCat} <span class="text-xs text-indigo-400 ml-1">(${mainPercentage}%)</span></span><span>${mainTotal.toLocaleString()}</span></div><div class="w-full bg-gray-200 rounded-full h-2 mb-3 shadow-inner"><div class="bg-indigo-500 h-2 rounded-full transition-all duration-500" style="width: ${mainPercentage}%"></div></div>`;
                     if (subCats.length > 0) {
                         catHtml += `<div class="pl-3 space-y-3 border-l-2 border-indigo-100 ml-1">`;
                         subCats.forEach(sub => {
                             const subAmt = subTotals[sub];
                             if (subAmt > 0) {
                                 const subPercentage = displayTotal === 0 ? 0 : ((subAmt / displayTotal) * 100).toFixed(1);
-                                catHtml += `
-                                    <div class="pl-2">
-                                        <div class="flex justify-between text-xs font-medium text-gray-600 mb-1">
-                                            <span>${sub} <span class="text-gray-400 ml-1">(${subPercentage}%)</span></span>
-                                            <span>${subAmt.toLocaleString()}</span>
-                                        </div>
-                                        <div class="w-full bg-gray-200 rounded-full h-1.5">
-                                            <div class="bg-indigo-300 h-1.5 rounded-full transition-all duration-500" style="width: ${subPercentage}%"></div>
-                                        </div>
-                                    </div>
-                                `;
+                                catHtml += `<div class="pl-2"><div class="flex justify-between text-xs font-medium text-gray-600 mb-1"><span>${sub} <span class="text-gray-400 ml-1">(${subPercentage}%)</span></span><span>${subAmt.toLocaleString()}</span></div><div class="w-full bg-gray-200 rounded-full h-1.5"><div class="bg-indigo-300 h-1.5 rounded-full transition-all duration-500" style="width: ${subPercentage}%"></div></div></div>`;
                             }
                         });
                         catHtml += `</div>`;
@@ -956,7 +991,6 @@
                     catHtml += `</div>`;
                 }
             }
-            
             if(catHtml === '') catHtml = `<div class="text-center text-gray-400 py-6 font-medium">尚無相關紀錄</div>`;
             catListDiv.innerHTML = catHtml;
         }
@@ -965,40 +999,20 @@
             const monthlyTbody = document.getElementById('annual-monthly-tbody');
             let monthHtml = '';
             const maxMonthExpense = Math.max(...monthlyTotals, 1);
-
             for (let i = 0; i < 12; i++) {
                 const amount = monthlyTotals[i];
                 const widthPercent = Math.round((amount / maxMonthExpense) * 100);
                 const isSelected = selectedAnnualMonth === i;
                 const bgClass = isSelected ? 'bg-indigo-100/50' : 'hover:bg-gray-50'; 
-
-                monthHtml += `
-                    <tr onclick="selectAnnualMonth(${i})" class="cursor-pointer transition-colors ${bgClass}">
-                        <td class="px-4 py-3 border-r border-gray-100 font-bold ${isSelected ? 'text-indigo-700' : 'text-gray-600'} w-16 text-center">${i + 1}月</td>
-                        <td class="px-4 py-3 relative">
-                            <div class="absolute inset-y-0 left-0 bg-indigo-50 border-l-4 ${isSelected ? 'border-indigo-600' : 'border-indigo-400'} transition-all duration-500" style="width: ${widthPercent}%; opacity: 0.6; margin-top: 4px; margin-bottom: 4px;"></div>
-                            <div class="relative z-10 flex justify-end font-medium ${amount > 0 ? (isSelected ? 'text-indigo-900 font-bold' : 'text-indigo-900') : 'text-gray-400'}">
-                                ${amount.toLocaleString()}
-                            </div>
-                        </td>
-                    </tr>
-                `;
+                monthHtml += `<tr onclick="selectAnnualMonth(${i})" class="cursor-pointer transition-colors ${bgClass}"><td class="px-4 py-3 border-r border-gray-100 font-bold ${isSelected ? 'text-indigo-700' : 'text-gray-600'} w-16 text-center">${i + 1}月</td><td class="px-4 py-3 relative"><div class="absolute inset-y-0 left-0 bg-indigo-50 border-l-4 ${isSelected ? 'border-indigo-600' : 'border-indigo-400'} transition-all duration-500" style="width: ${widthPercent}%; opacity: 0.6; margin-top: 4px; margin-bottom: 4px;"></div><div class="relative z-10 flex justify-end font-medium ${amount > 0 ? (isSelected ? 'text-indigo-900 font-bold' : 'text-indigo-900') : 'text-gray-400'}">${amount.toLocaleString()}</div></td></tr>`;
             }
             monthlyTbody.innerHTML = monthHtml;
         }
 
-        function selectAnnualMonth(monthIndex) {
-            selectedAnnualMonth = monthIndex;
-            updateAnnualOverview(); 
-        }
+        function selectAnnualMonth(monthIndex) { selectedAnnualMonth = monthIndex; updateAnnualOverview(); }
+        function resetAnnualCategory() { selectedAnnualMonth = null; updateAnnualOverview(); }
 
-        function resetAnnualCategory() {
-            selectedAnnualMonth = null;
-            updateAnnualOverview(); 
-        }
-
-        // ================== 資料備份與還原邏輯 ==================
-
+        // ================== 手動備份與還原 ==================
         function showBackupMessage(msg, isSuccess = true) {
             const msgDiv = document.getElementById('backup-msg');
             msgDiv.innerText = msg;
@@ -1008,23 +1022,17 @@
         }
 
         function exportData() {
-            if (records.length === 0) {
-                showBackupMessage("目前沒有任何紀錄可備份喔！", false);
-                return;
-            }
-            
+            if (records.length === 0) { showBackupMessage("目前沒有任何紀錄可備份喔！", false); return; }
             try {
                 const dataStr = JSON.stringify(records);
                 const dataUri = 'data:application/json;charset=utf-8,' + encodeURIComponent(dataStr);
                 const exportFileDefaultName = `簡易記帳本備份_${getLocalYMD(new Date())}.json`;
-                
                 const linkElement = document.createElement('a');
                 linkElement.setAttribute('href', dataUri);
                 linkElement.setAttribute('download', exportFileDefaultName);
                 document.body.appendChild(linkElement);
                 linkElement.click();
                 document.body.removeChild(linkElement);
-                
                 showBackupMessage("已成功匯出備份檔案！", true);
             } catch (error) {
                 showBackupMessage("匯出失敗，請稍後再試。", false);
@@ -1034,25 +1042,24 @@
         function importData(event) {
             const file = event.target.files[0];
             if (!file) return;
-
             const reader = new FileReader();
-            reader.onload = function(e) {
+            reader.onload = async function(e) {
                 try {
                     const importedRecords = JSON.parse(e.target.result);
                     if (Array.isArray(importedRecords)) {
                         records = importedRecords;
-                        
-                        // 確保匯入的歷史資料若為舊版，能自動升級相容
                         records.forEach(r => { 
                             if(!r.currency) r.currency = 'TWD'; 
                             if(r.category === '餐點') r.category = '餐點-其他';
                             if(r.category === '交通') r.category = '交通-其他';
                         });
-
                         localStorage.setItem('expenseRecords', JSON.stringify(records));
                         showBackupMessage("資料已成功還原！", true);
                         updateCurrencyFilterOptions();
                         updateAnnualOverview(); 
+                        
+                        // 【雲端機制】還原後如果已有金鑰，自動上傳一份成為主檔
+                        backgroundSyncUpload();
                     } else {
                         showBackupMessage("檔案格式不正確，還原失敗。", false);
                     }
