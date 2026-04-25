@@ -5,7 +5,7 @@
 // 當您修改了主程式 (index.html) 時，請務必將下方的 v1.1.0 往上加 (例如改為 v1.2.0)
 // 只要這個名稱改變，手機就會立刻知道有新版本，並強制下載最新畫面！
 // ==========================================
-const CACHE_NAME = 'money-app-cache-v2.2.0'; 
+const CACHE_NAME = 'money-app-cache-v2.4.0'; 
 
 const CORE_ASSETS = [
     './',
