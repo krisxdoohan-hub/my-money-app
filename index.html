@@ -208,7 +208,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.3.0 (細分分析版)
+                System Version: v3.4.0 (高對比視覺版)
             </div>
         </div>
     </div>
@@ -231,13 +231,16 @@
         function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
         function showSettingsMsg(msg, isSuccess = true) { const d = document.getElementById('settings-msg'); d.innerText = msg; d.className = `text-center text-xs font-bold transition-opacity duration-300 h-4 ${isSuccess ? 'text-green-600' : 'text-red-600'}`; d.style.opacity = '1'; setTimeout(() => { d.style.opacity = '0'; }, 3000); }
 
+        // ✨【全新視覺引擎】強化高飽和度對齊與字體權重 ✨
         function getAmountColor(amount, type) {
-            if (type === 'income') return 'text-green-600';
-            if (amount < 1000) return 'text-rose-500';
-            if (amount < 3000) return 'text-red-600';
-            if (amount < 5000) return 'text-red-700';
-            if (amount < 10000) return 'text-red-800';
-            return 'text-red-950 font-black';
+            if (type === 'income') return 'text-green-600 font-bold'; // 收入統一綠色
+
+            // 支出級距：選用鮮豔且對比度強的類別
+            if (amount < 1000) return 'text-orange-500 font-medium'; // 亮橘紅 (Orange-500)
+            if (amount < 3000) return 'text-rose-500 font-bold';    // 鮮粉紅 (Rose-500)
+            if (amount < 5000) return 'text-red-500 font-black';    // 鮮紅色 (Red-500)
+            if (amount < 10000) return 'text-pink-700 font-black';  // 深粉紅 (Pink-700)
+            return 'text-red-700 font-black underline decoration-2'; // 濃郁紅 + 底線 (Red-700)
         }
 
         function updateCloudIcon(state) {
@@ -297,7 +300,6 @@
             renderAnalytics(); renderHistory();
         }
 
-        // ✨【全新升級】細分分析引擎 ✨
         function renderAnalytics() {
             const container = document.getElementById('analyticsContent');
             const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0');
@@ -306,8 +308,7 @@
 
             if(total === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-400 font-bold text-sm">本月無${filterType === 'expense'?'支出':'收入'}資料</div>`; return; }
 
-            // 1. 構建層級數據結構
-            const catData = {}; // { main: { total: 0, subs: { sub: amount } } }
+            const catData = {}; 
             targetRecords.forEach(r => {
                 const parts = r.category.split('-');
                 const main = parts[0];
@@ -317,7 +318,6 @@
                 catData[main].subs[sub] = (catData[main].subs[sub] || 0) + r.amount;
             });
 
-            // 2. 排序大類別
             const sortedMains = Object.keys(catData).sort((a, b) => catData[b].total - catData[a].total);
             const colors = ['#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#14b8a6', '#22c55e', '#06b6d4'];
             let conicStops = [], currentDeg = 0, listHtml = '<div class="w-full mt-8 space-y-6">';
@@ -331,7 +331,6 @@
                 conicStops.push(`${color} ${currentDeg}deg ${currentDeg + deg}deg`); 
                 currentDeg += deg;
 
-                // 渲染主類別
                 listHtml += `
                 <div class="space-y-2">
                     <div class="flex items-center justify-between group">
@@ -342,22 +341,20 @@
                                 <p class="text-[10px] font-bold text-gray-400">${pct.toFixed(1)}%</p>
                             </div>
                         </div>
-                        <span class="text-sm font-black ${getAmountColor(data.total, filterType)}">${data.total.toLocaleString()}</span>
+                        <span class="text-sm ${getAmountColor(data.total, filterType)}">${data.total.toLocaleString()}</span>
                     </div>
-                    <!-- 渲染細項列表 -->
                     <div class="ml-6 space-y-1.5 border-l-2 border-gray-100 pl-3">
                 `;
 
-                // 排序並渲染細項
                 const sortedSubs = Object.keys(data.subs).sort((a,b) => data.subs[b] - data.subs[a]);
                 sortedSubs.forEach(sub => {
                     const subAmt = data.subs[sub];
                     listHtml += `
-                    <div class="flex justify-between items-center text-[11px] text-gray-500 font-medium">
-                        <span class="flex items-center gap-1.5">
+                    <div class="flex justify-between items-center text-[11px] font-medium">
+                        <span class="flex items-center gap-1.5 text-gray-500">
                             <span class="w-1 h-1 rounded-full bg-gray-300"></span>${sub}
                         </span>
-                        <span>${subAmt.toLocaleString()}</span>
+                        <span class="${getAmountColor(subAmt, filterType)}">${subAmt.toLocaleString()}</span>
                     </div>`;
                 });
 
@@ -389,7 +386,7 @@
                 const day = date.substring(8, 10), wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
                 html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-gray-800">${day}</span><span class="text-xs font-bold text-gray-400 mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">`;
                 grouped[date].forEach(r => {
-                    html += `<div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center ${r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} group-active:scale-90 transition-transform"><i class="ph ${r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up'} text-lg"></i></div><div><p class="text-sm font-bold text-gray-800">${r.category}</p><p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p></div></div><span class="text-base font-black ${getAmountColor(r.amount, r.type)}">${r.amount.toLocaleString()}</span></div>`;
+                    html += `<div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center ${r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} group-active:scale-90 transition-transform"><i class="ph ${r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up'} text-lg"></i></div><div><p class="text-sm font-bold text-gray-800">${r.category}</p><p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p></div></div><span class="text-base ${getAmountColor(r.amount, r.type)}">${r.amount.toLocaleString()}</span></div>`;
                 });
                 html += `</div></div>`;
             });
@@ -442,7 +439,7 @@
         function loadCloudConfig() { const s = localStorage.getItem('moneyAppCloudConfig'); if (s) { const p = JSON.parse(s); cloudConfig.owner = p.owner || ''; cloudConfig.repo = p.repo || ''; cloudConfig.token = p.token || ''; cloudConfig.lastSha = p.lastSha || null; document.getElementById('cfg-owner').value = cloudConfig.owner; document.getElementById('cfg-repo').value = cloudConfig.repo; document.getElementById('cfg-token').value = cloudConfig.token; } }
         async function fetchGitHubData() { if (!cloudConfig.token) return null; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}?t=${Date.now()}`; try { const res = await fetch(url, { headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json' } }); if (res.status === 404) return { isNew: true }; if (!res.ok) throw new Error(); const d = await res.json(); cloudConfig.lastSha = d.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return { isNew: false, records: JSON.parse(b64_to_utf8(d.content)) }; } catch (e) { return { error: e.message }; } }
         async function putGitHubData() { if (!cloudConfig.token) return false; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}`; if (!cloudConfig.lastSha) { const cur = await fetchGitHubData(); if (cur && cur.error) return false; } const payload = { message: `v3 sync`, content: utf8_to_b64(JSON.stringify(records)), sha: cloudConfig.lastSha }; try { const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error(); const d = await res.json(); cloudConfig.lastSha = d.content.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return true; } catch (e) { return false; } }
-        async function forceSyncDownload() { if (!cloudConfig.token) return; showLoading("下載中..."); const res = await fetchGitHubData(); hideLoading(); if (res && res.records) { records = res.records; records.forEach(r=>{if(!r.type)r.type='expense'; if(!r.currency)r.currency='TWD';}); localStorage.setItem('expenseRecords', JSON.stringify(records)); updateCloudIcon('success'); renderAll(); showSettingsMsg("同步成功！"); } else { updateCloudIcon('error'); } }
+        async function forceSyncDownload() { if (!cloudConfig.token) return; showLoading("下載中..."); const res = await fetchGitHubData(); hideLoading(); if (res && res.records) { records = res.records; localStorage.setItem('expenseRecords', JSON.stringify(records)); updateCloudIcon('success'); renderAll(); showSettingsMsg("同步成功！"); } else { updateCloudIcon('error'); } }
         async function forceSyncUpload() { if (!cloudConfig.token) return; const i = document.getElementById('cloud-status-icon'); i.innerHTML = '<div class="spinner w-5 h-5 border-2"></div>'; const s = await putGitHubData(); if (s) { showSettingsMsg("上傳成功！"); updateCloudIcon('success'); } else { showSettingsMsg("失敗", false); updateCloudIcon('error'); } }
         function exportData() { if (records.length === 0) return; try { const d = JSON.stringify(records), u = 'data:application/json;charset=utf-8,' + encodeURIComponent(d), l = document.createElement('a'); l.href = u; l.download = `backup_${getLocalYMD(new Date())}.json`; document.body.appendChild(l); l.click(); document.body.removeChild(l); showSettingsMsg("已導出"); } catch (e) {} }
         function importData(ev) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = async function(e) { try { const im = JSON.parse(e.target.result); if (Array.isArray(im)) { records = im; localStorage.setItem('expenseRecords', JSON.stringify(records)); showSettingsMsg("已還原"); renderAll(); updateCloudIcon('unsynced'); } } catch(err) {} ev.target.value = ''; }; r.readAsText(f); }
