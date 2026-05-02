@@ -15,26 +15,26 @@
         .spinner { border: 3px solid rgba(255,255,255,0.3); border-radius: 50%; border-top-color: #fff; width: 20px; height: 20px; animation: spin 1s ease-in-out infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         
+        /* 動態圓餅圖基礎設定 */
         .donut-chart { width: 120px; height: 120px; border-radius: 50%; background: conic-gradient(#e2e8f0 0% 100%); position: relative; }
         .donut-chart::before { content: ""; position: absolute; inset: 20px; background-color: #ffffff; border-radius: 50%; box-shadow: inset 0 2px 4px rgba(0,0,0,0.05); }
     </style>
 </head>
 <body class="text-gray-800 font-sans antialiased h-[100dvh] flex flex-col relative overflow-hidden">
 
-    <!-- 全域載入遮罩 -->
     <div id="loading-overlay" class="fixed inset-0 bg-indigo-900/80 z-[100] hidden flex-col justify-center items-center text-white backdrop-blur-sm">
         <div class="spinner mb-4 w-10 h-10 border-4"></div>
         <p id="loading-text" class="font-bold tracking-wider">處理中...</p>
     </div>
 
-    <!-- 頂部導航區 -->
     <header class="bg-white px-4 py-3 shadow-sm z-30 flex justify-between items-center flex-shrink-0">
         <div class="flex items-center gap-2 text-indigo-700">
             <i class="ph ph-wallet text-2xl"></i>
-            <span class="font-bold tracking-widest text-sm sm:text-base">家計總覽</span>
+            <span class="font-bold tracking-widest">家計總覽</span>
         </div>
         <div class="flex items-center gap-3">
-            <button id="cloud-status-icon" onclick="forceSyncUpload()" class="text-gray-300 transition-colors p-1.5 rounded-full hover:bg-gray-100 focus:outline-none" title="手動同步至雲端">
+            <!-- 雲端狀態指示燈 -->
+            <button id="cloud-status-icon" onclick="forceSyncUpload()" class="text-gray-300 transition-colors p-1.5 rounded-full hover:bg-gray-100 focus:outline-none" title="強制上傳雲端">
                 <i class="ph ph-cloud-slash text-2xl"></i>
             </button>
             <button onclick="openSettings()" class="text-gray-500 hover:text-indigo-600 transition-colors p-1.5 rounded-full hover:bg-indigo-50 focus:outline-none">
@@ -43,11 +43,9 @@
         </div>
     </header>
 
-    <!-- 核心滾動區塊 -->
     <main class="flex-1 overflow-y-auto p-4 sm:p-6 pb-24 relative">
         <div class="max-w-5xl mx-auto">
             
-            <!-- 月份導航 -->
             <header class="flex justify-between items-center mb-6">
                 <div class="flex items-center gap-3 mx-auto">
                     <button onclick="changeMonth(-1)" class="p-2 bg-white rounded-xl shadow-sm border border-gray-100 active:scale-95 transition-transform">
@@ -66,12 +64,11 @@
                 </div>
             </header>
 
-            <!-- 多幣別看板 -->
             <section id="currencyDashboard" class="flex overflow-x-auto gap-4 pb-4 mb-4 no-scrollbar scroll-smooth snap-x">
             </section>
 
-            <!-- 類別分析與歷史明細 -->
             <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                
                 <div class="space-y-6">
                     <div class="bg-white p-6 rounded-[24px] shadow-sm border border-gray-100">
                         <div class="flex justify-between items-center mb-6">
@@ -80,7 +77,9 @@
                                 <h2 class="text-sm font-bold text-gray-800">類別分佈分析</h2>
                             </div>
                         </div>
-                        <div id="analyticsContent" class="flex flex-col items-center"></div>
+                        
+                        <div id="analyticsContent" class="flex flex-col items-center">
+                        </div>
                     </div>
                 </div>
 
@@ -95,19 +94,19 @@
                             <button onclick="setFilterType('income')" id="filterInc" class="px-4 py-1 text-xs font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700">收入</button>
                         </div>
                     </div>
-                    <div id="historyList" class="space-y-4"></div>
+                    
+                    <div id="historyList" class="space-y-4 pb-6">
+                    </div>
                 </div>
             </div>
 
         </div>
     </main>
 
-    <!-- 懸浮新增按鈕 -->
     <button onclick="openAddModal()" class="fixed bottom-6 right-6 bg-indigo-600 text-white w-14 h-14 rounded-full shadow-lg flex items-center justify-center hover:bg-indigo-700 active:scale-90 transition-transform z-40 focus:outline-none">
         <i class="ph ph-plus text-2xl"></i>
     </button>
 
-    <!-- 記帳模態框 -->
     <div id="addRecordModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex-col justify-end sm:justify-center items-center p-0 sm:p-4 transition-opacity duration-300 opacity-0">
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[24px] shadow-2xl transform translate-y-full sm:translate-y-0 transition-transform duration-300" id="addRecordContent">
             <div class="p-6">
@@ -154,7 +153,6 @@
         </div>
     </div>
 
-    <!-- 系統設定模態框 -->
     <div id="settingsModal" class="fixed inset-0 bg-gray-900/40 backdrop-blur-sm z-50 hidden flex-col justify-end sm:justify-center items-center p-0 sm:p-4 transition-opacity duration-300 opacity-0">
         <div class="bg-white w-full sm:max-w-md rounded-t-[32px] sm:rounded-[24px] shadow-2xl transform translate-y-full sm:translate-y-0 transition-transform duration-300 flex flex-col max-h-[90vh]" id="settingsContent">
             <div class="p-6 border-b border-gray-100 flex justify-between items-center flex-shrink-0">
@@ -208,7 +206,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.4.0 (高對比視覺版)
+                System Version: v3.4.1 (投資擴充版)
             </div>
         </div>
     </div>
@@ -216,13 +214,21 @@
     <script>
         if ('serviceWorker' in navigator) { window.addEventListener('load', () => { navigator.serviceWorker.register('./sw.js'); }); }
 
-        let records = []; let currentViewDate = new Date(); let currentCurrency = 'TWD'; let filterType = 'expense'; let editingRecordId = null; let currentModalRecordType = 'expense';
+        let records = []; 
+        let currentViewDate = new Date(); 
+        let currentCurrency = 'TWD'; 
+        let filterType = 'expense'; 
+        let editingRecordId = null;
+        let currentModalRecordType = 'expense';
+        
         let cloudConfig = { owner: '', repo: '', token: '', path: 'data.json', lastSha: null };
 
         const categoryMap = {
-            'expense': { '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'], '交通': ['加油', '大眾運輸', '停車', '保修', '其他'], '生活': ['日用品', '水電瓦斯', '電信', '房租', '其他'], '娛樂': ['聚餐', '影音', '遊戲', '旅遊', '其他'], '其他': [] },
+            'expense': { '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'], '交通': ['加油', '大眾運輸', '停車', '保修', '其他'], '生活': ['日用品', '水電瓦斯', '電信', '房租', '信用卡費', '其他'], '娛樂': ['聚餐', '影音', '遊戲', '旅遊', '其他'], '投資': ['台股單張', '台股零股', '定期定額', '定期定股'], '其他': [] },
             'income': { '薪資': ['本薪', '獎金', '加班費'], '投資': ['股息', '利息', '資本利得'], '其他收入': ['中獎', '退款', '其他'] }
-        };
+};
+
+        const defaultCurrencyList = ['TWD', 'JPY', 'USD', 'EUR'];
 
         function getLocalYMD(d) { const y = d.getFullYear(), m = String(d.getMonth() + 1).padStart(2, '0'), day = String(d.getDate()).padStart(2, '0'); return `${y}-${m}-${day}`; }
         function utf8_to_b64(str) { return window.btoa(unescape(encodeURIComponent(str))); }
@@ -231,73 +237,138 @@
         function hideLoading() { document.getElementById('loading-overlay').classList.replace('flex', 'hidden'); }
         function showSettingsMsg(msg, isSuccess = true) { const d = document.getElementById('settings-msg'); d.innerText = msg; d.className = `text-center text-xs font-bold transition-opacity duration-300 h-4 ${isSuccess ? 'text-green-600' : 'text-red-600'}`; d.style.opacity = '1'; setTimeout(() => { d.style.opacity = '0'; }, 3000); }
 
-        // ✨【全新視覺引擎】強化高飽和度對齊與字體權重 ✨
-        function getAmountColor(amount, type) {
-            if (type === 'income') return 'text-green-600 font-bold'; // 收入統一綠色
-
-            // 支出級距：選用鮮豔且對比度強的類別
-            if (amount < 1000) return 'text-orange-500 font-medium'; // 亮橘紅 (Orange-500)
-            if (amount < 3000) return 'text-rose-500 font-bold';    // 鮮粉紅 (Rose-500)
-            if (amount < 5000) return 'text-red-500 font-black';    // 鮮紅色 (Red-500)
-            if (amount < 10000) return 'text-pink-700 font-black';  // 深粉紅 (Pink-700)
-            return 'text-red-700 font-black underline decoration-2'; // 濃郁紅 + 底線 (Red-700)
-        }
-
+        // ✨ 強化版雲端狀態燈號 ✨
         function updateCloudIcon(state) {
             const icon = document.getElementById('cloud-status-icon');
-            if (state === 'success') { icon.innerHTML = '<i class="ph ph-cloud-check text-2xl"></i>'; icon.className = 'text-green-500 transition-colors p-1.5 rounded-full hover:bg-green-50 focus:outline-none'; icon.title = "已同步雲端"; }
-            else if (state === 'unsynced') { icon.innerHTML = '<i class="ph ph-cloud-arrow-up text-2xl"></i>'; icon.className = 'text-orange-500 transition-colors p-1.5 rounded-full hover:bg-orange-50 focus:outline-none animate-pulse'; icon.title = "有新資料，請手動同步！"; }
-            else { icon.innerHTML = '<i class="ph ph-cloud-warning text-2xl"></i>'; icon.className = 'text-red-400 transition-colors p-1.5 rounded-full hover:bg-red-50 focus:outline-none'; icon.title = "同步未連接"; }
+            if (state === 'success') { 
+                icon.innerHTML = '<i class="ph ph-cloud-check text-2xl"></i>'; 
+                icon.className = 'text-green-500 transition-colors p-1.5 rounded-full hover:bg-green-50 focus:outline-none'; 
+                icon.title = "已與雲端同步"; 
+            } else if (state === 'unsynced') {
+                // 橘燈提示：有尚未上傳的本地變更
+                icon.innerHTML = '<i class="ph ph-cloud-arrow-up text-2xl"></i>'; 
+                icon.className = 'text-orange-500 transition-colors p-1.5 rounded-full hover:bg-orange-50 focus:outline-none animate-pulse'; 
+                icon.title = "有未上傳的變更，請點擊上傳！"; 
+            } else { 
+                icon.innerHTML = '<i class="ph ph-cloud-warning text-2xl"></i>'; 
+                icon.className = 'text-red-400 transition-colors p-1.5 rounded-full hover:bg-red-50 focus:outline-none'; 
+                icon.title = "同步失敗 / 尚未設定金鑰"; 
+            }
         }
 
         async function init() {
             loadCloudConfig();
             const saved = localStorage.getItem('expenseRecords');
-            if (saved) { records = JSON.parse(saved); records.forEach(r => { if(!r.currency) r.currency = 'TWD'; if(!r.type) r.type = 'expense'; }); }
-            const used = [...new Set(records.map(r => r.currency))]; if(used.length > 0 && !used.includes(currentCurrency)) currentCurrency = used[0];
+            if (saved) { 
+                records = JSON.parse(saved); 
+                records.forEach(r => { 
+                    if(!r.currency) r.currency = 'TWD'; 
+                    if(!r.type) r.type = 'expense'; 
+                }); 
+            }
+            
+            const used = [...new Set(records.map(r => r.currency))];
+            if(used.length > 0 && !used.includes(currentCurrency)) currentCurrency = used[0];
+
             renderAll();
+
+            // ✨ 開啟 APP 時自動下載 (Pull-on-load) ✨
             if (cloudConfig.token) { 
                 const res = await fetchGitHubData(); 
                 if (res && res.records) { 
-                    records = res.records; records.forEach(r => { if(!r.type) r.type = 'expense'; if(!r.currency) r.currency = 'TWD'; });
-                    localStorage.setItem('expenseRecords', JSON.stringify(records)); updateCloudIcon('success'); renderAll(); 
+                    records = res.records; 
+                    records.forEach(r => { if(!r.type) r.type = 'expense'; if(!r.currency) r.currency = 'TWD'; });
+                    localStorage.setItem('expenseRecords', JSON.stringify(records)); 
+                    updateCloudIcon('success'); 
+                    renderAll(); 
                 } else { updateCloudIcon('error'); } 
             }
         }
 
-        function renderAll() { renderHeader(); renderCurrencyDashboard(); renderAnalytics(); renderHistory(); }
-        function renderHeader() {
-            const y = currentViewDate.getFullYear(), m = currentViewDate.getMonth() + 1;
-            document.getElementById('currentYearDisplay').innerText = y; document.getElementById('currentMonthDisplay').innerText = `${m}月`;
-            const today = new Date(); const btn = document.getElementById('backTodayBtn');
-            if(y === today.getFullYear() && m === today.getMonth() + 1) btn.classList.add('hidden'); else btn.classList.remove('hidden');
+        function renderAll() {
+            renderHeader();
+            renderCurrencyDashboard();
+            renderAnalytics();
+            renderHistory();
         }
+
+        function renderHeader() {
+            const y = currentViewDate.getFullYear();
+            const m = currentViewDate.getMonth() + 1;
+            document.getElementById('currentYearDisplay').innerText = y;
+            document.getElementById('currentMonthDisplay').innerText = `${m}月`;
+            
+            const today = new Date();
+            const btn = document.getElementById('backTodayBtn');
+            if(y === today.getFullYear() && m === today.getMonth() + 1) btn.classList.add('hidden');
+            else btn.classList.remove('hidden');
+        }
+
         function changeMonth(delta) { currentViewDate.setMonth(currentViewDate.getMonth() + delta); renderAll(); }
         function resetToToday() { currentViewDate = new Date(); renderAll(); }
 
         function renderCurrencyDashboard() {
             const dash = document.getElementById('currencyDashboard');
-            const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0'), prefix = `${y}-${m}`;
+            const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0');
+            const prefix = `${y}-${m}`;
             const monthRecords = records.filter(r => r.date.startsWith(prefix));
+            
             let usedCurrencies = [...new Set(monthRecords.map(r => r.currency))];
             if(usedCurrencies.length === 0) usedCurrencies = ['TWD'];
             if(!usedCurrencies.includes(currentCurrency)) currentCurrency = usedCurrencies[0];
+
             let html = '';
             usedCurrencies.forEach(curr => {
                 const cRecs = monthRecords.filter(r => r.currency === curr);
-                const inc = cRecs.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0), exp = cRecs.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
+                const inc = cRecs.filter(r => r.type === 'income').reduce((s, r) => s + r.amount, 0);
+                const exp = cRecs.filter(r => r.type === 'expense').reduce((s, r) => s + r.amount, 0);
+                const net = inc - exp;
                 const isActive = curr === currentCurrency;
-                html += `<div onclick="selectCurrency('${curr}')" class="min-w-[240px] snap-center p-5 rounded-[24px] cursor-pointer transition-all duration-300 border shadow-sm ${isActive ? 'bg-indigo-600 text-white border-indigo-500 scale-100' : 'bg-white text-gray-800 border-gray-100 scale-95 opacity-70'}"><div class="flex justify-between items-center mb-4"><span class="text-xs font-black tracking-widest ${isActive ? 'text-indigo-200' : 'text-gray-400'}">${curr}</span><div class="w-8 h-8 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-gray-100'}"><i class="ph ph-coins text-lg ${isActive ? 'text-white' : 'text-gray-500'}"></i></div></div><div><p class="text-xs font-medium mb-1 opacity-80">本月結餘</p><h3 class="text-3xl font-black tracking-tight">${(inc - exp).toLocaleString()}</h3></div><div class="flex items-center gap-4 mt-4 pt-4 border-t ${isActive ? 'border-indigo-500/50' : 'border-gray-100'}"><div class="flex-1"><p class="text-[10px] uppercase font-bold opacity-60">收入</p><p class="text-sm font-bold">${inc.toLocaleString()}</p></div><div class="flex-1"><p class="text-[10px] uppercase font-bold opacity-60">支出</p><p class="text-sm font-bold">${exp.toLocaleString()}</p></div></div></div>`;
+                
+                const baseClass = "min-w-[240px] snap-center p-5 rounded-[24px] cursor-pointer transition-all duration-300 border shadow-sm ";
+                const stateClass = isActive ? "bg-indigo-600 text-white border-indigo-500 scale-100" : "bg-white text-gray-800 border-gray-100 scale-95 opacity-70 hover:opacity-100 hover:scale-[0.98]";
+                
+                html += `
+                <div onclick="selectCurrency('${curr}')" class="${baseClass} ${stateClass}">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-xs font-black tracking-widest ${isActive ? 'text-indigo-200' : 'text-gray-400'}">${curr}</span>
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center ${isActive ? 'bg-white/20' : 'bg-gray-100'}">
+                            <i class="ph ph-coins text-lg ${isActive ? 'text-white' : 'text-gray-500'}"></i>
+                        </div>
+                    </div>
+                    <div>
+                        <p class="text-xs font-medium mb-1 opacity-80">本月結餘</p>
+                        <h3 class="text-3xl font-black tracking-tight">${net.toLocaleString()}</h3>
+                    </div>
+                    <div class="flex items-center gap-4 mt-4 pt-4 border-t ${isActive ? 'border-indigo-500/50' : 'border-gray-100'}">
+                        <div class="flex-1">
+                            <p class="text-[10px] uppercase font-bold opacity-60 flex items-center gap-1"><i class="ph ph-arrow-down-left"></i>收入</p>
+                            <p class="text-sm font-bold mt-0.5">${inc.toLocaleString()}</p>
+                        </div>
+                        <div class="flex-1">
+                            <p class="text-[10px] uppercase font-bold opacity-60 flex items-center gap-1"><i class="ph ph-arrow-up-right"></i>支出</p>
+                            <p class="text-sm font-bold mt-0.5">${exp.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>`;
             });
             dash.innerHTML = html;
         }
+
         function selectCurrency(curr) { currentCurrency = curr; renderAll(); }
 
         function setFilterType(type) {
-            filterType = type; const expBtn = document.getElementById('filterExp'), incBtn = document.getElementById('filterInc');
-            if(type === 'expense') { expBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm"; incBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all text-gray-500"; }
-            else { incBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm"; expBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all text-gray-500"; }
-            renderAnalytics(); renderHistory();
+            filterType = type;
+            const expBtn = document.getElementById('filterExp'), incBtn = document.getElementById('filterInc');
+            if(type === 'expense') {
+                expBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm";
+                incBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+            } else {
+                incBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all bg-white text-indigo-600 shadow-sm";
+                expBtn.className = "px-4 py-1 text-xs font-bold rounded-lg transition-all text-gray-500 hover:text-gray-700";
+            }
+            renderAnalytics();
+            renderHistory();
         }
 
         function renderAnalytics() {
@@ -306,67 +377,53 @@
             const targetRecords = records.filter(r => r.date.startsWith(`${y}-${m}`) && r.currency === currentCurrency && r.type === filterType);
             const total = targetRecords.reduce((s, r) => s + r.amount, 0);
 
-            if(total === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-400 font-bold text-sm">本月無${filterType === 'expense'?'支出':'收入'}資料</div>`; return; }
+            if(total === 0) {
+                container.innerHTML = `<div class="py-10 text-center text-gray-400 font-bold text-sm"><i class="ph ph-empty text-3xl mb-2 block opacity-50"></i>本月無${filterType === 'expense'?'支出':'收入'}資料</div>`;
+                return;
+            }
 
-            const catData = {}; 
+            const catSums = {};
             targetRecords.forEach(r => {
-                const parts = r.category.split('-');
-                const main = parts[0];
-                const sub = parts[1] || '其他';
-                if(!catData[main]) catData[main] = { total: 0, subs: {} };
-                catData[main].total += r.amount;
-                catData[main].subs[sub] = (catData[main].subs[sub] || 0) + r.amount;
+                const mainCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
+                catSums[mainCat] = (catSums[mainCat] || 0) + r.amount;
             });
 
-            const sortedMains = Object.keys(catData).sort((a, b) => catData[b].total - catData[a].total);
+            const sortedCats = Object.keys(catSums).sort((a, b) => catSums[b] - catSums[a]);
             const colors = ['#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#14b8a6', '#22c55e', '#06b6d4'];
-            let conicStops = [], currentDeg = 0, listHtml = '<div class="w-full mt-8 space-y-6">';
+            let conicStops = [], currentDeg = 0;
+            let listHtml = '<div class="w-full mt-8 space-y-4">';
 
-            sortedMains.forEach((main, index) => {
-                const data = catData[main];
-                const pct = (data.total / total) * 100;
+            sortedCats.forEach((cat, index) => {
+                const amount = catSums[cat];
+                const pct = (amount / total) * 100;
                 const deg = (pct / 100) * 360;
                 const color = colors[index % colors.length];
                 
-                conicStops.push(`${color} ${currentDeg}deg ${currentDeg + deg}deg`); 
+                conicStops.push(`${color} ${currentDeg}deg ${currentDeg + deg}deg`);
                 currentDeg += deg;
 
                 listHtml += `
-                <div class="space-y-2">
-                    <div class="flex items-center justify-between group">
-                        <div class="flex items-center gap-3">
-                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${color}"></span>
-                            <div>
-                                <p class="text-sm font-black text-gray-800">${main}</p>
-                                <p class="text-[10px] font-bold text-gray-400">${pct.toFixed(1)}%</p>
-                            </div>
+                <div class="flex items-center justify-between group">
+                    <div class="flex items-center gap-3">
+                        <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${color}"></span>
+                        <div>
+                            <p class="text-sm font-bold text-gray-700">${cat}</p>
+                            <p class="text-[10px] font-bold text-gray-400">${pct.toFixed(1)}%</p>
                         </div>
-                        <span class="text-sm ${getAmountColor(data.total, filterType)}">${data.total.toLocaleString()}</span>
                     </div>
-                    <div class="ml-6 space-y-1.5 border-l-2 border-gray-100 pl-3">
+                    <span class="text-sm font-black text-gray-800">${amount.toLocaleString()}</span>
+                </div>
                 `;
-
-                const sortedSubs = Object.keys(data.subs).sort((a,b) => data.subs[b] - data.subs[a]);
-                sortedSubs.forEach(sub => {
-                    const subAmt = data.subs[sub];
-                    listHtml += `
-                    <div class="flex justify-between items-center text-[11px] font-medium">
-                        <span class="flex items-center gap-1.5 text-gray-500">
-                            <span class="w-1 h-1 rounded-full bg-gray-300"></span>${sub}
-                        </span>
-                        <span class="${getAmountColor(subAmt, filterType)}">${subAmt.toLocaleString()}</span>
-                    </div>`;
-                });
-
-                listHtml += `</div></div>`;
             });
             listHtml += '</div>';
 
+            const gradientStr = `conic-gradient(${conicStops.join(', ')})`;
+            
             container.innerHTML = `
                 <div class="relative flex justify-center items-center">
-                    <div class="donut-chart shadow-sm" style="background: conic-gradient(${conicStops.join(', ')})"></div>
-                    <div class="absolute flex flex-col items-center pointer-events-none">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase">總計</span>
+                    <div class="donut-chart shadow-sm transition-all duration-700" style="background: ${gradientStr}"></div>
+                    <div class="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
+                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">總計</span>
                         <span class="text-sm font-black text-indigo-900">${total.toLocaleString()}</span>
                     </div>
                 </div>
@@ -378,15 +435,39 @@
             const list = document.getElementById('historyList');
             const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0');
             const targetRecords = records.filter(r => r.date.startsWith(`${y}-${m}`) && r.currency === currentCurrency && r.type === filterType);
-            if(targetRecords.length === 0) { list.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 font-bold text-sm border border-gray-100">尚無資料</div>`; return; }
-            const grouped = {}; targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
+            
+            if(targetRecords.length === 0) {
+                list.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 font-bold text-sm border border-gray-100 shadow-sm">尚無資料</div>`;
+                return;
+            }
+
+            const grouped = {};
+            targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
             const sortedDates = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
+            
             let html = '';
             sortedDates.forEach(date => {
-                const day = date.substring(8, 10), wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
-                html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-gray-800">${day}</span><span class="text-xs font-bold text-gray-400 mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">`;
+                const dayStr = date.substring(8, 10);
+                const wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
+                
+                html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-gray-800">${dayStr}</span><span class="text-xs font-bold text-gray-400 mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">`;
+                
                 grouped[date].forEach(r => {
-                    html += `<div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group"><div class="flex items-center gap-4"><div class="w-10 h-10 rounded-full flex items-center justify-center ${r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500'} group-active:scale-90 transition-transform"><i class="ph ${r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up'} text-lg"></i></div><div><p class="text-sm font-bold text-gray-800">${r.category}</p><p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p></div></div><span class="text-base ${getAmountColor(r.amount, r.type)}">${r.amount.toLocaleString()}</span></div>`;
+                    const iconColor = r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500';
+                    const iconPh = r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up';
+                    html += `
+                    <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
+                        <div class="flex items-center gap-4">
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform">
+                                <i class="ph ${iconPh} text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 mb-0.5">${r.category}</p>
+                                <p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p>
+                            </div>
+                        </div>
+                        <span class="text-base font-black ${r.type==='expense'?'text-gray-800':'text-green-600'}">${r.amount.toLocaleString()}</span>
+                    </div>`;
                 });
                 html += `</div></div>`;
             });
@@ -394,55 +475,181 @@
         }
 
         function openAddModal() {
-            editingRecordId = null; document.getElementById('modalTitle').innerText = '新增紀錄'; document.getElementById('btn-delete').classList.add('hidden');
-            document.getElementById('input-date').value = getLocalYMD(new Date()); document.getElementById('input-amount').value = ''; document.getElementById('input-note').value = ''; document.getElementById('input-currency').value = currentCurrency;
-            setRecordType(filterType);
-            const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent'); m.classList.remove('hidden'); m.classList.add('flex'); requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); });
+            editingRecordId = null;
+            document.getElementById('modalTitle').innerText = '新增紀錄';
+            document.getElementById('btn-delete').classList.add('hidden');
+            
+            document.getElementById('input-date').value = getLocalYMD(new Date());
+            document.getElementById('input-amount').value = '';
+            document.getElementById('input-note').value = '';
+            document.getElementById('input-currency').value = currentCurrency;
+            setRecordType(filterType); 
+            
+            const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); });
         }
-        function editRecord(id) {
-            editingRecordId = id; const r = records.find(x => x.id === id); if(!r) return;
-            document.getElementById('modalTitle').innerText = '編輯紀錄'; document.getElementById('btn-delete').classList.remove('hidden');
-            document.getElementById('input-date').value = r.date; document.getElementById('input-note').value = r.note === '無備註' ? '' : r.note; document.getElementById('input-amount').value = r.amount; document.getElementById('input-currency').value = r.currency;
-            setRecordType(r.type || 'expense'); const mCat = r.category.includes('-') ? r.category.split('-')[0] : r.category, sCat = r.category.includes('-') ? r.category.split('-')[1] : null;
-            document.getElementById('input-category-main').value = mCat; updateSubCategories(sCat);
-            const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent'); m.classList.remove('hidden'); m.classList.add('flex'); requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); });
-        }
-        function closeAddModal() { const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent'); m.classList.add('opacity-0'); c.classList.add('translate-y-full'); setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300); }
-        function setRecordType(type) {
-            currentModalRecordType = type; const eBtn = document.getElementById('btnTypeExp'), iBtn = document.getElementById('btnTypeInc');
-            if(type === 'expense') { eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white text-red-500 shadow-sm"; iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg text-gray-500"; }
-            else { iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg bg-white text-green-500 shadow-sm"; eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg text-gray-500"; }
-            const mainSel = document.getElementById('input-category-main'), cats = Object.keys(categoryMap[type]); mainSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join(''); updateSubCategories();
-        }
-        function updateSubCategories(def = null) {
-            const mainCat = document.getElementById('input-category-main').value, subSel = document.getElementById('input-category-sub'), subs = categoryMap[currentModalRecordType][mainCat] || [];
-            if(subs.length > 0) { subSel.classList.remove('hidden'); subSel.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join(''); if(def && subs.includes(def)) subSel.value = def; }
-            else { subSel.classList.add('hidden'); subSel.innerHTML = ''; }
-        }
-        function saveRecord() {
-            const d = document.getElementById('input-date').value, n = document.getElementById('input-note').value, a = document.getElementById('input-amount').value, curr = document.getElementById('input-currency').value, mCat = document.getElementById('input-category-main').value, sSel = document.getElementById('input-category-sub');
-            let cat = mCat; if(!sSel.classList.contains('hidden') && sSel.value) cat = `${mCat}-${sSel.value}`; if (!d || !a || parseFloat(a) <= 0) { alert("輸入有誤"); return; }
-            if(editingRecordId) { const idx = records.findIndex(r => r.id === editingRecordId); if(idx !== -1) records[idx] = { id: editingRecordId, type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr }; }
-            else { records.push({ id: Date.now().toString(), type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr }); }
-            localStorage.setItem('expenseRecords', JSON.stringify(records)); closeAddModal(); renderAll(); updateCloudIcon('unsynced');
-        }
-        async function executeDelete() { if(!editingRecordId) return; records = records.filter(r => r.id !== editingRecordId); localStorage.setItem('expenseRecords', JSON.stringify(records)); closeAddModal(); renderAll(); updateCloudIcon('unsynced'); }
 
-        function openSettings() { loadCloudConfig(); const m = document.getElementById('settingsModal'), c = document.getElementById('settingsContent'); m.classList.remove('hidden'); m.classList.add('flex'); requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); }); }
-        function closeSettings() { const m = document.getElementById('settingsModal'), c = document.getElementById('settingsContent'); m.classList.add('opacity-0'); c.classList.add('translate-y-full'); setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300); }
+        function editRecord(id) {
+            editingRecordId = id;
+            const r = records.find(x => x.id === id);
+            if(!r) return;
+            
+            document.getElementById('modalTitle').innerText = '編輯紀錄';
+            document.getElementById('btn-delete').classList.remove('hidden');
+            
+            document.getElementById('input-date').value = r.date;
+            document.getElementById('input-note').value = r.note === '無備註' ? '' : r.note;
+            document.getElementById('input-amount').value = r.amount;
+            document.getElementById('input-currency').value = r.currency;
+            setRecordType(r.type || 'expense');
+            
+            const mCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
+            const sCat = r.category.includes('-') ? r.category.split('-')[1] : null;
+            document.getElementById('input-category-main').value = mCat;
+            updateSubCategories(sCat);
+            
+            const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); });
+        }
+
+        function closeAddModal() {
+            const m = document.getElementById('addRecordModal'), c = document.getElementById('addRecordContent');
+            m.classList.add('opacity-0'); c.classList.add('translate-y-full');
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+        }
+
+        function setRecordType(type) {
+            currentModalRecordType = type;
+            const eBtn = document.getElementById('btnTypeExp'), iBtn = document.getElementById('btnTypeInc');
+            if(type === 'expense') {
+                eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all bg-white text-red-500 shadow-sm";
+                iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-green-500";
+            } else {
+                iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all bg-white text-green-500 shadow-sm";
+                eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-red-500";
+            }
+            
+            const mainSel = document.getElementById('input-category-main');
+            const cats = Object.keys(categoryMap[type]);
+            mainSel.innerHTML = cats.map(c => `<option value="${c}">${c}</option>`).join('');
+            updateSubCategories();
+        }
+
+        function updateSubCategories(def = null) {
+            const mainCat = document.getElementById('input-category-main').value;
+            const subSel = document.getElementById('input-category-sub');
+            const subs = categoryMap[currentModalRecordType][mainCat] || [];
+            if(subs.length > 0) {
+                subSel.classList.remove('hidden');
+                subSel.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+                if(def && subs.includes(def)) subSel.value = def;
+            } else {
+                subSel.classList.add('hidden'); subSel.innerHTML = '';
+            }
+        }
+
+        function saveRecord() {
+            const d = document.getElementById('input-date').value, n = document.getElementById('input-note').value, a = document.getElementById('input-amount').value, curr = document.getElementById('input-currency').value;
+            const mCat = document.getElementById('input-category-main').value, sSel = document.getElementById('input-category-sub');
+            let cat = mCat; if(!sSel.classList.contains('hidden') && sSel.value) cat = `${mCat}-${sSel.value}`;
+            if (!d || !a || parseFloat(a) <= 0) { alert("請輸入正確金額與日期"); return; }
+
+            if(editingRecordId) {
+                const idx = records.findIndex(r => r.id === editingRecordId);
+                if(idx !== -1) records[idx] = { id: editingRecordId, type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr };
+            } else {
+                records.push({ id: Date.now().toString(), type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr });
+            }
+            
+            localStorage.setItem('expenseRecords', JSON.stringify(records));
+            closeAddModal();
+            renderAll();
+            
+            // ✨ 拔除自動上傳，改為亮起橘燈提示使用者 ✨
+            updateCloudIcon('unsynced');
+        }
+
+        function executeDelete() {
+            if(!editingRecordId) return;
+            records = records.filter(r => r.id !== editingRecordId);
+            localStorage.setItem('expenseRecords', JSON.stringify(records));
+            closeAddModal(); 
+            renderAll(); 
+            
+            // ✨ 拔除自動上傳，改為亮起橘燈提示使用者 ✨
+            updateCloudIcon('unsynced');
+        }
+
+        // ================= 設定與雲端中控台 =================
+        function openSettings() {
+            loadCloudConfig();
+            const m = document.getElementById('settingsModal'), c = document.getElementById('settingsContent');
+            m.classList.remove('hidden'); m.classList.add('flex');
+            requestAnimationFrame(() => { m.classList.remove('opacity-0'); c.classList.remove('translate-y-full'); });
+        }
+        function closeSettings() {
+            const m = document.getElementById('settingsModal'), c = document.getElementById('settingsContent');
+            m.classList.add('opacity-0'); c.classList.add('translate-y-full');
+            setTimeout(() => { m.classList.add('hidden'); m.classList.remove('flex'); }, 300);
+        }
+
         function toggleCloudConfigVisibility() {
             const o = document.getElementById('cfg-owner'), r = document.getElementById('cfg-repo'), t = document.getElementById('cfg-token'), i = document.getElementById('icon-visibility');
             if (t.type === 'password') { o.type = 'text'; r.type = 'text'; t.type = 'text'; i.classList.replace('ph-eye-slash', 'ph-eye'); }
             else { o.type = 'password'; r.type = 'password'; t.type = 'password'; i.classList.replace('ph-eye', 'ph-eye-slash'); }
         }
-        function saveCloudConfig() { cloudConfig.owner = document.getElementById('cfg-owner').value.trim(); cloudConfig.repo = document.getElementById('cfg-repo').value.trim(); cloudConfig.token = document.getElementById('cfg-token').value.trim(); localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); showSettingsMsg("已儲存！"); if(cloudConfig.token) forceSyncDownload(); }
+
+        function saveCloudConfig() { cloudConfig.owner = document.getElementById('cfg-owner').value.trim(); cloudConfig.repo = document.getElementById('cfg-repo').value.trim(); cloudConfig.token = document.getElementById('cfg-token').value.trim(); localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); showSettingsMsg("金鑰已儲存！"); if(cloudConfig.token) forceSyncDownload(); }
         function loadCloudConfig() { const s = localStorage.getItem('moneyAppCloudConfig'); if (s) { const p = JSON.parse(s); cloudConfig.owner = p.owner || ''; cloudConfig.repo = p.repo || ''; cloudConfig.token = p.token || ''; cloudConfig.lastSha = p.lastSha || null; document.getElementById('cfg-owner').value = cloudConfig.owner; document.getElementById('cfg-repo').value = cloudConfig.repo; document.getElementById('cfg-token').value = cloudConfig.token; } }
-        async function fetchGitHubData() { if (!cloudConfig.token) return null; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}?t=${Date.now()}`; try { const res = await fetch(url, { headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json' } }); if (res.status === 404) return { isNew: true }; if (!res.ok) throw new Error(); const d = await res.json(); cloudConfig.lastSha = d.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return { isNew: false, records: JSON.parse(b64_to_utf8(d.content)) }; } catch (e) { return { error: e.message }; } }
-        async function putGitHubData() { if (!cloudConfig.token) return false; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}`; if (!cloudConfig.lastSha) { const cur = await fetchGitHubData(); if (cur && cur.error) return false; } const payload = { message: `v3 sync`, content: utf8_to_b64(JSON.stringify(records)), sha: cloudConfig.lastSha }; try { const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error(); const d = await res.json(); cloudConfig.lastSha = d.content.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return true; } catch (e) { return false; } }
-        async function forceSyncDownload() { if (!cloudConfig.token) return; showLoading("下載中..."); const res = await fetchGitHubData(); hideLoading(); if (res && res.records) { records = res.records; localStorage.setItem('expenseRecords', JSON.stringify(records)); updateCloudIcon('success'); renderAll(); showSettingsMsg("同步成功！"); } else { updateCloudIcon('error'); } }
-        async function forceSyncUpload() { if (!cloudConfig.token) return; const i = document.getElementById('cloud-status-icon'); i.innerHTML = '<div class="spinner w-5 h-5 border-2"></div>'; const s = await putGitHubData(); if (s) { showSettingsMsg("上傳成功！"); updateCloudIcon('success'); } else { showSettingsMsg("失敗", false); updateCloudIcon('error'); } }
-        function exportData() { if (records.length === 0) return; try { const d = JSON.stringify(records), u = 'data:application/json;charset=utf-8,' + encodeURIComponent(d), l = document.createElement('a'); l.href = u; l.download = `backup_${getLocalYMD(new Date())}.json`; document.body.appendChild(l); l.click(); document.body.removeChild(l); showSettingsMsg("已導出"); } catch (e) {} }
-        function importData(ev) { const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); r.onload = async function(e) { try { const im = JSON.parse(e.target.result); if (Array.isArray(im)) { records = im; localStorage.setItem('expenseRecords', JSON.stringify(records)); showSettingsMsg("已還原"); renderAll(); updateCloudIcon('unsynced'); } } catch(err) {} ev.target.value = ''; }; r.readAsText(f); }
+
+        async function fetchGitHubData() { if (!cloudConfig.token) return null; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}?t=${Date.now()}`; try { const res = await fetch(url, { headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json' } }); if (res.status === 404) return { isNew: true }; if (!res.ok) throw new Error(`API 錯誤`); const d = await res.json(); cloudConfig.lastSha = d.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return { isNew: false, records: JSON.parse(b64_to_utf8(d.content)) }; } catch (e) { return { error: e.message }; } }
+        async function putGitHubData() { if (!cloudConfig.token) return false; const url = `https://api.github.com/repos/${cloudConfig.owner}/${cloudConfig.repo}/contents/${cloudConfig.path}`; if (!cloudConfig.lastSha) { const cur = await fetchGitHubData(); if (cur && cur.error) return false; } const payload = { message: `v3 Auto sync`, content: utf8_to_b64(JSON.stringify(records)), sha: cloudConfig.lastSha }; try { const res = await fetch(url, { method: 'PUT', headers: { 'Authorization': `token ${cloudConfig.token}`, 'Accept': 'application/vnd.github.v3+json', 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!res.ok) throw new Error(); const d = await res.json(); cloudConfig.lastSha = d.content.sha; localStorage.setItem('moneyAppCloudConfig', JSON.stringify(cloudConfig)); return true; } catch (e) { return false; } }
+
+        async function forceSyncDownload() { if (!cloudConfig.token) { showSettingsMsg("請先設定金鑰", false); return; } showLoading("下載中..."); const res = await fetchGitHubData(); hideLoading(); if (res && res.records) { records = res.records; records.forEach(r=>{if(!r.type)r.type='expense';}); localStorage.setItem('expenseRecords', JSON.stringify(records)); updateCloudIcon('success'); renderAll(); showSettingsMsg("下載覆蓋成功！"); } else if (res && res.isNew) { showSettingsMsg("雲端無檔案，請上傳", false); updateCloudIcon('error'); } else { showSettingsMsg("下載失敗", false); updateCloudIcon('error'); } }
+        
+        async function forceSyncUpload() { 
+            if (!cloudConfig.token) { showSettingsMsg("請先設定金鑰", false); return; } 
+            const i = document.getElementById('cloud-status-icon'); 
+            const oH = i.innerHTML; 
+            i.innerHTML = '<div class="spinner w-5 h-5 border-2 border-indigo-400 border-t-indigo-600"></div>'; 
+            
+            const success = await putGitHubData(); 
+            if (success) {
+                showSettingsMsg("強制上傳成功！"); 
+                updateCloudIcon('success');
+            } else { 
+                showSettingsMsg("上傳失敗", false); 
+                i.innerHTML = oH; 
+                updateCloudIcon('error'); 
+            } 
+        }
+
+        function exportData() { if (records.length === 0) { showSettingsMsg("無資料可匯出", false); return; } try { const d = JSON.stringify(records), u = 'data:application/json;charset=utf-8,' + encodeURIComponent(d), l = document.createElement('a'); l.href = u; l.download = `記帳備份_${getLocalYMD(new Date())}.json`; document.body.appendChild(l); l.click(); document.body.removeChild(l); showSettingsMsg("JSON 匯出成功！"); } catch (e) { showSettingsMsg("匯出失敗", false); } }
+        
+        function importData(ev) { 
+            const f = ev.target.files[0]; if (!f) return; const r = new FileReader(); 
+            r.onload = async function(e) { 
+                try { 
+                    const im = JSON.parse(e.target.result); 
+                    if (Array.isArray(im)) { 
+                        records = im; 
+                        records.forEach(r=>{if(!r.type)r.type='expense'; if(!r.currency)r.currency='TWD';}); 
+                        localStorage.setItem('expenseRecords', JSON.stringify(records)); 
+                        showSettingsMsg("還原成功！"); 
+                        renderAll(); 
+                        
+                        // ✨ 拔除匯入時的自動上傳，改為橘燈提示 ✨
+                        updateCloudIcon('unsynced');
+                    } else {
+                        showSettingsMsg("格式錯誤", false); 
+                    }
+                } catch(err) { showSettingsMsg("讀取失敗", false); } 
+                ev.target.value = ''; 
+            }; 
+            r.readAsText(f); 
+        }
 
         window.onload = init;
     </script>
