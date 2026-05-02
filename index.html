@@ -206,7 +206,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.4.1 (投資擴充版)
+                System Version: v3.4.2 (投資擴充版)
             </div>
         </div>
     </div>
@@ -387,96 +387,73 @@
             const targetRecords = records.filter(r => r.date.startsWith(`${y}-${m}`) && r.currency === currentCurrency && r.type === filterType);
             const total = targetRecords.reduce((s, r) => s + r.amount, 0);
 
-            if(total === 0) {
-                container.innerHTML = `<div class="py-10 text-center text-gray-400 font-bold text-sm"><i class="ph ph-empty text-3xl mb-2 block opacity-50"></i>本月無${filterType === 'expense'?'支出':'收入'}資料</div>`;
-                return;
-            }
+            if(total === 0) { container.innerHTML = `<div class="py-10 text-center text-gray-400 font-bold text-sm">本月無${filterType === 'expense'?'支出':'收入'}資料</div>`; return; }
 
-            const catSums = {};
+            const catData = {}; 
             targetRecords.forEach(r => {
-                const mainCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
-                catSums[mainCat] = (catSums[mainCat] || 0) + r.amount;
+                const parts = r.category.split('-');
+                const main = parts[0];
+                const sub = parts[1] || '其他';
+                if(!catData[main]) catData[main] = { total: 0, subs: {} };
+                catData[main].total += r.amount;
+                catData[main].subs[sub] = (catData[main].subs[sub] || 0) + r.amount;
             });
 
-            const sortedCats = Object.keys(catSums).sort((a, b) => catSums[b] - catSums[a]);
+            const sortedMains = Object.keys(catData).sort((a, b) => catData[b].total - catData[a].total);
             const colors = ['#6366f1', '#a855f7', '#ec4899', '#f43f5e', '#f97316', '#eab308', '#14b8a6', '#22c55e', '#06b6d4'];
-            let conicStops = [], currentDeg = 0;
-            let listHtml = '<div class="w-full mt-8 space-y-4">';
+            let conicStops = [], currentDeg = 0, listHtml = '<div class="w-full mt-8 space-y-6">';
 
-            sortedCats.forEach((cat, index) => {
-                const amount = catSums[cat];
-                const pct = (amount / total) * 100;
+            sortedMains.forEach((main, index) => {
+                const data = catData[main];
+                const pct = (data.total / total) * 100;
                 const deg = (pct / 100) * 360;
                 const color = colors[index % colors.length];
-                
-                conicStops.push(`${color} ${currentDeg}deg ${currentDeg + deg}deg`);
+                conicStops.push(`${color} ${currentDeg}deg ${currentDeg + deg}deg`); 
                 currentDeg += deg;
 
                 listHtml += `
-                <div class="flex items-center justify-between group">
-                    <div class="flex items-center gap-3">
-                        <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${color}"></span>
-                        <div>
-                            <p class="text-sm font-bold text-gray-700">${cat}</p>
-                            <p class="text-[10px] font-bold text-gray-400">${pct.toFixed(1)}%</p>
+                <div class="space-y-2">
+                    <div class="flex items-center justify-between group">
+                        <div class="flex items-center gap-3">
+                            <span class="w-3 h-3 rounded-full shadow-sm" style="background-color: ${color}"></span>
+                            <div><p class="text-sm font-black text-gray-800">${main}</p><p class="text-[10px] font-bold text-gray-400">${pct.toFixed(1)}%</p></div>
                         </div>
+                        <span class="text-sm ${getAmountColor(data.total, filterType)}">${data.total.toLocaleString()}</span>
                     </div>
-                    <span class="text-sm font-black text-gray-800">${amount.toLocaleString()}</span>
-                </div>
+                    <div class="ml-6 space-y-1.5 border-l-2 border-gray-100 pl-3">
                 `;
+                const sortedSubs = Object.keys(data.subs).sort((a,b) => data.subs[b] - data.subs[a]);
+                sortedSubs.forEach(sub => {
+                    const subAmt = data.subs[sub];
+                    listHtml += `<div class="flex justify-between items-center text-[11px] font-medium"><span class="flex items-center gap-1.5 text-gray-500"><span class="w-1 h-1 rounded-full bg-gray-300"></span>${sub}</span><span class="${getAmountColor(subAmt, filterType)}">${subAmt.toLocaleString()}</span></div>`;
+                });
+                listHtml += `</div></div>`;
             });
             listHtml += '</div>';
-
-            const gradientStr = `conic-gradient(${conicStops.join(', ')})`;
-            
-            container.innerHTML = `
-                <div class="relative flex justify-center items-center">
-                    <div class="donut-chart shadow-sm transition-all duration-700" style="background: ${gradientStr}"></div>
-                    <div class="absolute inset-0 flex flex-col justify-center items-center pointer-events-none">
-                        <span class="text-[10px] font-bold text-gray-400 uppercase tracking-wider mb-0.5">總計</span>
-                        <span class="text-sm font-black text-indigo-900">${total.toLocaleString()}</span>
-                    </div>
-                </div>
-                ${listHtml}
-            `;
+            container.innerHTML = `<div class="relative flex justify-center items-center"><div class="donut-chart shadow-sm" style="background: conic-gradient(${conicStops.join(', ')})"></div><div class="absolute flex flex-col items-center pointer-events-none"><span class="text-[10px] font-bold text-gray-400 uppercase">總計</span><span class="text-sm font-black text-indigo-900">${total.toLocaleString()}</span></div></div>${listHtml}`;
         }
 
         function renderHistory() {
             const list = document.getElementById('historyList');
             const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0');
             const targetRecords = records.filter(r => r.date.startsWith(`${y}-${m}`) && r.currency === currentCurrency && r.type === filterType);
-            
-            if(targetRecords.length === 0) {
-                list.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 font-bold text-sm border border-gray-100 shadow-sm">尚無資料</div>`;
-                return;
-            }
-
-            const grouped = {};
-            targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
+            if(targetRecords.length === 0) { list.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 font-bold text-sm border border-gray-100 shadow-sm">尚無資料</div>`; return; }
+            const grouped = {}; targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
             const sortedDates = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
-            
             let html = '';
             sortedDates.forEach(date => {
-                const dayStr = date.substring(8, 10);
-                const wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
-                
+                const dayStr = date.substring(8, 10), wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
                 html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-gray-800">${dayStr}</span><span class="text-xs font-bold text-gray-400 mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">`;
-                
                 grouped[date].forEach(r => {
                     const iconColor = r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500';
                     const iconPh = r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up';
                     html += `
                     <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform">
-                                <i class="ph ${iconPh} text-lg"></i>
-                            </div>
-                            <div>
-                                <p class="text-sm font-bold text-gray-800 mb-0.5">${r.category}</p>
-                                <p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p>
-                            </div>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform"><i class="ph ${iconPh} text-lg"></i></div>
+                            <div><p class="text-sm font-bold text-gray-800 mb-0.5">${r.category}</p><p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p></div>
                         </div>
-                        <span class="text-base font-black ${r.type==='expense'?'text-gray-800':'text-green-600'}">${r.amount.toLocaleString()}</span>
+                        <span class="text-base ${getAmountColor(r.amount, r.type)}">${r.amount.toLocaleString()}</span>
                     </div>`;
                 });
                 html += `</div></div>`;
