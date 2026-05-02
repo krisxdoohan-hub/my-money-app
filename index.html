@@ -226,7 +226,17 @@
         const categoryMap = {
             'expense': { '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'], '交通': ['加油', '大眾運輸', '停車', '保修', '其他'], '生活': ['日用品', '水電瓦斯', '電信', '房租', '信用卡費', '其他'], '娛樂': ['聚餐', '影音', '遊戲', '旅遊', '其他'], '投資': ['台股單張', '台股零股', '定期定額', '定期定股'], '其他': [] },
             'income': { '薪資': ['本薪', '獎金', '加班費'], '投資': ['股息', '利息', '資本利得'], '其他收入': ['中獎', '退款', '其他'] }
-};
+        };
+
+        // ✨【補回消失的視覺引擎】根據級距切換顏色 ✨
+        function getAmountColor(amount, type) {
+            if (type === 'income') return 'text-green-600 font-bold'; 
+            if (amount < 1000) return 'text-orange-500 font-medium'; 
+            if (amount < 3000) return 'text-rose-500 font-bold';    
+            if (amount < 5000) return 'text-red-500 font-black';    
+            if (amount < 10000) return 'text-pink-700 font-black';  
+            return 'text-red-700 font-black underline decoration-2'; 
+        }
 
         const defaultCurrencyList = ['TWD', 'JPY', 'USD', 'EUR'];
 
