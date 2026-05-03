@@ -44,6 +44,8 @@
                 <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
                 <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
                 <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
             </div>
 
             <div class="grid grid-cols-3 gap-4 px-4">
@@ -244,7 +246,7 @@
                     <h4 class="font-bold text-indigo-900 text-sm flex items-center gap-2 mb-3"><i class="ph ph-shield-check text-indigo-500 text-lg"></i> 安全鎖定設定</h4>
                     <div class="space-y-3">
                         <div class="flex gap-2">
-                            <input type="password" id="input-new-pass" maxlength="4" placeholder="新 4 位數密碼" class="w-2/3 border-indigo-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none font-mono">
+                            <input type="password" id="input-new-pass" maxlength="6" placeholder="新 6 位數密碼" class="w-2/3 border-indigo-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none font-mono">
                             <button onclick="changeAppPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg active:scale-95 transition text-xs focus:outline-none">
                                 修改密碼
                             </button>
@@ -256,7 +258,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.4.3 (投資擴充版)
+                System Version: v3.4.4 (密碼擴充版)
             </div>
         </div>
     </div>
@@ -272,7 +274,7 @@
         let currentModalRecordType = 'expense';
         
         // --- 密碼變數 ---
-        let appPass = localStorage.getItem('appPass') || "0000"; // 初始預設 0000
+        let appPass = localStorage.getItem('appPass') || "000000"; // 初始預設 000000
         let currentInput = "";
         
         let cloudConfig = { owner: '', repo: '', token: '', path: 'data.json', lastSha: null };
@@ -697,11 +699,11 @@
         }
 // --- 密碼鎖邏輯核心 ---
         function inputPass(num) {
-            if (currentInput.length >= 4) return;
+            if (currentInput.length >= 6) return;
             currentInput += num;
             updatePassDots();
             
-            if (currentInput.length === 4) {
+            if (currentInput.length === 6) {
                 setTimeout(() => {
                     if (currentInput === appPass) {
                         unlockApp();
@@ -715,7 +717,7 @@
 
         function updatePassDots() {
             const dots = document.getElementById('pass-dots').children;
-            for (let i = 0; i < 4; i++) {
+            for (let i = 0; i < 6; i++) {
                 if (i < currentInput.length) {
                     dots[i].className = "w-4 h-4 rounded-full bg-indigo-400 border-2 border-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.5)]";
                 } else {
@@ -738,8 +740,8 @@
 
         function changeAppPassword() {
             const newVal = document.getElementById('input-new-pass').value.trim();
-            if (newVal.length !== 4 || isNaN(newVal)) {
-                showSettingsMsg("請輸入 4 位數純數字", false);
+            if (newVal.length !== 6 || isNaN(newVal)) {
+                showSettingsMsg("請輸入 6 位數純數字", false);
                 return;
             }
             appPass = newVal;
