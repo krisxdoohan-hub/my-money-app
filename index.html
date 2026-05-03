@@ -22,9 +22,45 @@
 </head>
 <body class="text-gray-800 font-sans antialiased h-[100dvh] flex flex-col relative overflow-hidden">
 
+    <!-- 讀取遮罩 -->
     <div id="loading-overlay" class="fixed inset-0 bg-indigo-900/80 z-[100] hidden flex-col justify-center items-center text-white backdrop-blur-sm">
         <div class="spinner mb-4 w-10 h-10 border-4"></div>
         <p id="loading-text" class="font-bold tracking-wider">處理中...</p>
+    </div>
+
+    <!-- 密碼解鎖畫面 (預設顯示) -->
+    <div id="lock-screen" class="fixed inset-0 bg-indigo-950 z-[200] flex flex-col justify-center items-center text-white p-6 transition-all duration-300">
+        <div class="w-full max-w-xs text-center space-y-10">
+            <div class="flex flex-col items-center gap-4">
+                <div class="w-20 h-20 bg-white/10 rounded-full flex items-center justify-center border border-white/20 shadow-xl">
+                    <i class="ph ph-lock-key text-4xl text-indigo-300"></i>
+                </div>
+                <h2 class="text-2xl font-black tracking-widest text-white">私人記帳簿</h2>
+                <p class="text-xs text-indigo-200 font-medium opacity-60">請輸入解鎖密碼</p>
+            </div>
+            
+            <div class="flex justify-center gap-4 py-4" id="pass-dots">
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+                <div class="w-4 h-4 rounded-full border-2 border-white/30"></div>
+            </div>
+
+            <div class="grid grid-cols-3 gap-4 px-4">
+                <button onclick="inputPass('1')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">1</button>
+                <button onclick="inputPass('2')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">2</button>
+                <button onclick="inputPass('3')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">3</button>
+                <button onclick="inputPass('4')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">4</button>
+                <button onclick="inputPass('5')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">5</button>
+                <button onclick="inputPass('6')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">6</button>
+                <button onclick="inputPass('7')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">7</button>
+                <button onclick="inputPass('8')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">8</button>
+                <button onclick="inputPass('9')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">9</button>
+                <div class="h-16"></div>
+                <button onclick="inputPass('0')" class="h-16 rounded-full bg-white/5 hover:bg-white/10 active:scale-90 transition-all text-2xl font-black">0</button>
+                <button onclick="clearPass()" class="h-16 rounded-full text-red-300 font-bold active:scale-95 text-sm uppercase">清除</button>
+            </div>
+        </div>
     </div>
 
     <header class="bg-white px-4 py-3 shadow-sm z-30 flex justify-between items-center flex-shrink-0">
@@ -201,8 +237,22 @@
                             <i class="ph ph-download-simple"></i> 匯入還原
                         </button>
                     </div>
+               
+                </div> <!-- 原有的 本機手動 JSON 區塊結束 -->
+
+                <div class="bg-indigo-50 rounded-2xl border border-indigo-100 p-4">
+                    <h4 class="font-bold text-indigo-900 text-sm flex items-center gap-2 mb-3"><i class="ph ph-shield-check text-indigo-500 text-lg"></i> 安全鎖定設定</h4>
+                    <div class="space-y-3">
+                        <div class="flex gap-2">
+                            <input type="password" id="input-new-pass" maxlength="4" placeholder="新 4 位數密碼" class="w-2/3 border-indigo-200 rounded-lg p-2 text-sm focus:ring-2 focus:ring-indigo-400 focus:outline-none font-mono">
+                            <button onclick="changeAppPassword()" class="flex-1 bg-indigo-600 hover:bg-indigo-700 text-white font-bold py-2 rounded-lg active:scale-95 transition text-xs focus:outline-none">
+                                修改密碼
+                            </button>
+                        </div>
+                        <p class="text-[10px] text-gray-400 leading-tight">下次開啟 APP 或從後台切換回前台時生效。</p>
+                    </div>
                 </div>
-                
+            
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
@@ -220,6 +270,10 @@
         let filterType = 'expense'; 
         let editingRecordId = null;
         let currentModalRecordType = 'expense';
+        
+        // --- 密碼變數 ---
+        let appPass = localStorage.getItem('appPass') || "0000"; // 初始預設 0000
+        let currentInput = "";
         
         let cloudConfig = { owner: '', repo: '', token: '', path: 'data.json', lastSha: null };
 
@@ -267,6 +321,10 @@
         }
 
         async function init() {
+            // 開啟時重設輸入狀態
+            clearPass();
+            // 如果沒設過密碼，可不顯示鎖定 (選擇性：如果您想要預設 0000 都要輸入，這段可略過)
+            
             loadCloudConfig();
             const saved = localStorage.getItem('expenseRecords');
             if (saved) { 
@@ -637,7 +695,58 @@
             }; 
             r.readAsText(f); 
         }
+// --- 密碼鎖邏輯核心 ---
+        function inputPass(num) {
+            if (currentInput.length >= 4) return;
+            currentInput += num;
+            updatePassDots();
+            
+            if (currentInput.length === 4) {
+                setTimeout(() => {
+                    if (currentInput === appPass) {
+                        unlockApp();
+                    } else {
+                        alert("密碼錯誤，請重新輸入");
+                        clearPass();
+                    }
+                }, 100);
+            }
+        }
 
+        function updatePassDots() {
+            const dots = document.getElementById('pass-dots').children;
+            for (let i = 0; i < 4; i++) {
+                if (i < currentInput.length) {
+                    dots[i].className = "w-4 h-4 rounded-full bg-indigo-400 border-2 border-indigo-400 shadow-[0_0_10px_rgba(129,140,248,0.5)]";
+                } else {
+                    dots[i].className = "w-4 h-4 rounded-full border-2 border-white/30";
+                }
+            }
+        }
+
+        function clearPass() {
+            currentInput = "";
+            updatePassDots();
+        }
+
+        function unlockApp() {
+            const overlay = document.getElementById('lock-screen');
+            overlay.classList.add('opacity-0', 'pointer-events-none');
+            overlay.style.transform = "scale(1.1)";
+            setTimeout(() => { overlay.classList.add('hidden'); }, 400);
+        }
+
+        function changeAppPassword() {
+            const newVal = document.getElementById('input-new-pass').value.trim();
+            if (newVal.length !== 4 || isNaN(newVal)) {
+                showSettingsMsg("請輸入 4 位數純數字", false);
+                return;
+            }
+            appPass = newVal;
+            localStorage.setItem('appPass', newVal);
+            document.getElementById('input-new-pass').value = "";
+            showSettingsMsg("密碼更新成功！");
+        }
         window.onload = init;
     </script>
 </body>
