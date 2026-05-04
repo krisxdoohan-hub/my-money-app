@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>簡易記帳本 v3</title>
+    <title>簡易記帳本 </title>
     <link rel="manifest" href="./manifest.json">
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://unpkg.com/@phosphor-icons/web"></script>
@@ -164,6 +164,15 @@
                     <div>
                         <input type="date" id="input-date" class="w-full border-gray-200 rounded-xl p-3 bg-gray-50 border focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-medium text-gray-700">
                     </div>
+                    <!-- ✨ [新增] 付款方式雙層選單 ✨ -->
+                    <div class="flex gap-2" id="account-select-group">
+                        <select id="input-account-main" onchange="updateSubAccounts()" class="w-1/2 border-gray-200 rounded-xl p-3 bg-emerald-50/50 border focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-bold text-emerald-800">
+                            <option value="現金">💵 現金</option>
+                            <option value="信用卡">💳 信用卡</option>
+                        </select>
+                        <select id="input-account-sub" class="w-1/2 border-gray-200 rounded-xl p-3 bg-emerald-50/50 border focus:ring-2 focus:ring-emerald-500 focus:outline-none text-sm font-bold text-emerald-700 hidden"></select>
+                    </div>
+                    <!-- 原本的消費類別選單 -->
                     <div class="flex gap-2">
                         <select id="input-category-main" onchange="updateSubCategories()" class="w-1/2 border-gray-200 rounded-xl p-3 bg-gray-50 border focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-bold text-gray-800"></select>
                         <select id="input-category-sub" class="w-1/2 border-gray-200 rounded-xl p-3 bg-indigo-50/50 border focus:ring-2 focus:ring-indigo-500 focus:outline-none text-sm font-bold text-indigo-700"></select>
@@ -258,7 +267,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.4.4 (密碼擴充版)
+                System Version: v3.4.5 (三維記帳版)
             </div>
         </div>
     </div>
@@ -280,11 +289,16 @@
         let cloudConfig = { owner: '', repo: '', token: '', path: 'data.json', lastSha: null };
 
         const categoryMap = {
-            'expense': { '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'], '交通': ['加油', '大眾運輸', '停車', '保修', '其他'], '生活': ['日用品', '水電瓦斯', '電信', '房租', '信用卡費', '其他'], '娛樂': ['聚餐', '影音', '遊戲', '旅遊', '其他'], '投資': ['台股單張', '台股零股', '定期定額', '定期定股'], '其他': [] },
+            'expense': { '餐點': ['早餐', '午餐', '晚餐', '飲品', '其他'], '交通': ['加油', '大眾運輸', '停車', '保修', '其他'], '生活': ['日用品', '水電瓦斯', '電信', '房租', '其他'], '娛樂': ['聚餐', '影音', '遊戲', '旅遊', '其他'], '投資': ['台股單張', '台股零股', '定期定額', '定期定股'], '其他': [] },
             'income': { '薪資': ['本薪', '獎金', '加班費'], '投資': ['股息', '利息', '資本利得'], '其他收入': ['中獎', '退款', '其他'] }
         };
 
-        // ✨【補回消失的視覺引擎】根據級距切換顏色 ✨
+        // ✨ [新增] 付款方式對應表 ✨
+        const accountMap = {
+            '現金': [],
+            '信用卡': ['中信卡', '玉山卡']
+        };
+
         function getAmountColor(amount, type) {
             if (type === 'income') return 'text-green-600 font-bold'; 
             if (amount < 1000) return 'text-orange-500 font-medium'; 
@@ -292,6 +306,20 @@
             if (amount < 5000) return 'text-red-500 font-black';    
             if (amount < 10000) return 'text-pink-700 font-black';  
             return 'text-red-700 font-black underline decoration-2'; 
+        }
+
+        // ✨ [新增] 控制付款子選單的函數 ✨
+        function updateSubAccounts(def = null) {
+            const mainAcc = document.getElementById('input-account-main').value;
+            const subSel = document.getElementById('input-account-sub');
+            const subs = accountMap[mainAcc] || [];
+            if(subs.length > 0) {
+                subSel.classList.remove('hidden');
+                subSel.innerHTML = subs.map(s => `<option value="${s}">${s}</option>`).join('');
+                if(def && subs.includes(def)) subSel.value = def;
+            } else {
+                subSel.classList.add('hidden'); subSel.innerHTML = '';
+            }
         }
 
         const defaultCurrencyList = ['TWD', 'JPY', 'USD', 'EUR'];
@@ -497,21 +525,35 @@
             const list = document.getElementById('historyList');
             const y = currentViewDate.getFullYear(), m = String(currentViewDate.getMonth() + 1).padStart(2, '0');
             const targetRecords = records.filter(r => r.date.startsWith(`${y}-${m}`) && r.currency === currentCurrency && r.type === filterType);
+            
             if(targetRecords.length === 0) { list.innerHTML = `<div class="bg-white rounded-2xl p-8 text-center text-gray-400 font-bold text-sm border border-gray-100 shadow-sm">尚無資料</div>`; return; }
-            const grouped = {}; targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
+
+            const grouped = {};
+            targetRecords.forEach(r => { if(!grouped[r.date]) grouped[r.date] = []; grouped[r.date].push(r); });
             const sortedDates = Object.keys(grouped).sort((a,b) => b.localeCompare(a));
+            
             let html = '';
             sortedDates.forEach(date => {
-                const dayStr = date.substring(8, 10), wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
+                const dayStr = date.substring(8, 10);
+                const wd = ['日','一','二','三','四','五','六'][new Date(date).getDay()];
+                
                 html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-gray-800">${dayStr}</span><span class="text-xs font-bold text-gray-400 mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-gray-100 overflow-hidden divide-y divide-gray-50">`;
+                
                 grouped[date].forEach(r => {
                     const iconColor = r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500';
                     const iconPh = r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up';
+                    const accBadge = (r.type === 'expense' && r.account) ? `<span class="inline-block bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2">${r.account.replace('信用卡-', '')}</span>` : '';
+
                     html += `
                     <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform"><i class="ph ${iconPh} text-lg"></i></div>
-                            <div><p class="text-sm font-bold text-gray-800 mb-0.5">${r.category}</p><p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p></div>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform">
+                                <i class="ph ${iconPh} text-lg"></i>
+                            </div>
+                            <div>
+                                <p class="text-sm font-bold text-gray-800 mb-0.5 flex items-center">${r.category} ${accBadge}</p>
+                                <p class="text-xs font-medium text-gray-400 truncate max-w-[150px]">${r.note}</p>
+                            </div>
                         </div>
                         <span class="text-base ${getAmountColor(r.amount, r.type)}">${r.amount.toLocaleString()}</span>
                     </div>`;
@@ -551,6 +593,14 @@
             document.getElementById('input-currency').value = r.currency;
             setRecordType(r.type || 'expense');
             
+            // ✨ [新增] 載入舊付款帳戶 ✨
+            if(r.type === 'expense' && r.account) {
+                const mAcc = r.account.includes('-') ? r.account.split('-')[0] : r.account;
+                const sAcc = r.account.includes('-') ? r.account.split('-')[1] : null;
+                document.getElementById('input-account-main').value = mAcc;
+                updateSubAccounts(sAcc);
+            }
+
             const mCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
             const sCat = r.category.includes('-') ? r.category.split('-')[1] : null;
             document.getElementById('input-category-main').value = mCat;
@@ -570,12 +620,16 @@
         function setRecordType(type) {
             currentModalRecordType = type;
             const eBtn = document.getElementById('btnTypeExp'), iBtn = document.getElementById('btnTypeInc');
+            const accGroup = document.getElementById('account-select-group'); // 新增這行
+            
             if(type === 'expense') {
                 eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all bg-white text-red-500 shadow-sm";
                 iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-green-500";
+                accGroup.classList.remove('hidden'); // 支出顯示帳戶
             } else {
                 iBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all bg-white text-green-500 shadow-sm";
                 eBtn.className = "flex-1 py-2 text-sm font-bold rounded-lg transition-all text-gray-500 hover:text-red-500";
+                accGroup.classList.add('hidden'); // 收入隱藏帳戶
             }
             
             const mainSel = document.getElementById('input-category-main');
@@ -601,19 +655,25 @@
             const d = document.getElementById('input-date').value, n = document.getElementById('input-note').value, a = document.getElementById('input-amount').value, curr = document.getElementById('input-currency').value;
             const mCat = document.getElementById('input-category-main').value, sSel = document.getElementById('input-category-sub');
             let cat = mCat; if(!sSel.classList.contains('hidden') && sSel.value) cat = `${mCat}-${sSel.value}`;
+            
+            // ✨ [新增] 讀取付款帳戶 ✨
+            const mAcc = document.getElementById('input-account-main').value, accSubSel = document.getElementById('input-account-sub');
+            let acc = mAcc; if(!accSubSel.classList.contains('hidden') && accSubSel.value) acc = `${mAcc}-${accSubSel.value}`;
+            if (currentModalRecordType === 'income') acc = '系統入帳'; // 收入預設帳戶
+
             if (!d || !a || parseFloat(a) <= 0) { alert("請輸入正確金額與日期"); return; }
 
             if(editingRecordId) {
                 const idx = records.findIndex(r => r.id === editingRecordId);
-                if(idx !== -1) records[idx] = { id: editingRecordId, type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr };
+                if(idx !== -1) records[idx] = { id: editingRecordId, type: currentModalRecordType, account: acc, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr };
             } else {
-                records.push({ id: Date.now().toString(), type: currentModalRecordType, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr });
+                records.push({ id: Date.now().toString(), type: currentModalRecordType, account: acc, date: d, category: cat, note: n||"無備註", amount: parseFloat(a), currency: curr });
             }
             
             localStorage.setItem('expenseRecords', JSON.stringify(records));
             closeAddModal();
             renderAll();
-            
+       
             // ✨ 拔除自動上傳，改為亮起橘燈提示使用者 ✨
             updateCloudIcon('unsynced');
         }
