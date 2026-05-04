@@ -267,7 +267,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-gray-400 font-medium border-t border-gray-50 bg-gray-50 rounded-b-[24px]">
-                System Version: v3.4.5 (三維記帳版)
+                System Version: v3.4.6 (三維記帳版)
             </div>
         </div>
     </div>
@@ -542,7 +542,21 @@
                 grouped[date].forEach(r => {
                     const iconColor = r.type === 'expense' ? 'bg-red-50 text-red-500' : 'bg-green-50 text-green-500';
                     const iconPh = r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up';
-                    const accBadge = (r.type === 'expense' && r.account) ? `<span class="inline-block bg-emerald-100 text-emerald-700 px-1.5 py-0.5 rounded text-[9px] font-bold ml-2">${r.account.replace('信用卡-', '')}</span>` : '';
+                    
+                    // ✨ [新增] 動態標籤顏色邏輯 ✨
+                    let accBadge = '';
+                    if (r.type === 'expense' && r.account) {
+                        let badgeText = r.account.replace('信用卡-', '');
+                        let badgeColor = 'bg-emerald-100 text-emerald-700'; // 預設：中信卡等 (淺綠色)
+
+                        if (r.account.includes('現金')) {
+                            badgeColor = 'bg-yellow-100 text-yellow-700'; // 現金：淡鵝黃色
+                        } else if (r.account.includes('玉山卡')) {
+                            badgeColor = 'bg-pink-100 text-pink-700'; // 玉山卡：淡粉紅色
+                        }
+
+                        accBadge = `<span class="inline-block ${badgeColor} px-1.5 py-0.5 rounded text-[9px] font-bold ml-2">${badgeText}</span>`;
+                    }
 
                     html += `
                     <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-gray-50 active:bg-gray-100 cursor-pointer transition-colors group">
