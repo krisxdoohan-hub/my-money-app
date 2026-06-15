@@ -275,7 +275,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-[#b5b8d1] font-medium border-t border-[#e9ebf2] bg-[#f8f9fc] rounded-b-[24px]">
-                System Version: v0.0.0.0.1 (莫蘭迪粉藍+ICON圖示升級版)
+                System Version: v0.0.0.0.1 (莫蘭迪粉藍+ICON圖示升級Emoji版)
             </div>
         </div>
     </div>
@@ -307,15 +307,37 @@
             '信用卡': ['中信卡', '玉山卡']
         };
 
-        const categoryStyleMap = {
-            '餐點': { emoji: '🍜', color: 'bg-[#fdf6e3]' },
-            '交通': { emoji: '🚆', color: 'bg-[#fae8e8]' },
-            '生活': { emoji: '🛍️', color: 'bg-[#e8f4f8]' },
-            '娛樂': { emoji: '🎮', color: 'bg-[#f3e8ff]' },
-            '投資': { emoji: '📈', color: 'bg-[#e3f2fd]' },
-            '薪資': { emoji: '💰', color: 'bg-[#e8f5e9]' },
-            '其他收入': { emoji: '🎁', color: 'bg-[#fff3e0]' },
-            '其他': { emoji: '🧾', color: 'bg-[#f5f5f5]' }
+        const categoryConfig = {
+            "早餐": { emoji: "🥪", color: "bg-[#fff3e0]" },
+            "午餐": { emoji: "🍱", color: "bg-[#ffe0b2]" },
+            "晚餐": { emoji: "🍲", color: "bg-[#ffcc80]" },
+            "飲品": { emoji: "🧋", color: "bg-[#d7ccc8]" },
+            "加油": { emoji: "⛽", color: "bg-[#e3f2fd]" },
+            "大眾運輸": { emoji: "🚆", color: "bg-[#bbdefb]" },
+            "停車": { emoji: "🅿️", color: "bg-[#cfd8dc]" },
+            "保修": { emoji: "🔧", color: "bg-[#f5f5f5]" },
+            "日用品": { emoji: "🛒", color: "bg-[#e8f5e9]" },
+            "水電瓦斯": { emoji: "⚡", color: "bg-[#fff9c4]" },
+            "電信費": { emoji: "📱", color: "bg-[#e1bee7]" },
+            "房貸或房租": { emoji: "🏠", color: "bg-[#c8e6c9]" },
+            "信用卡費": { emoji: "💳", color: "bg-[#ffcdd2]" },
+            "聚餐": { emoji: "🍻", color: "bg-[#ffe0b2]" },
+            "影音": { emoji: "🎬", color: "bg-[#d1c4e9]" },
+            "遊戲": { emoji: "🎮", color: "bg-[#b2dfdb]" },
+            "旅遊": { emoji: "✈️", color: "bg-[#b3e5fc]" },
+            "台股單張": { emoji: "📈", color: "bg-[#f8bbd0]" },
+            "台股零股": { emoji: "📊", color: "bg-[#f48fb1]" },
+            "定期定額": { emoji: "🗓️", color: "bg-[#b2ebf2]" },
+            "定期定股": { emoji: "🏦", color: "bg-[#e0e0e0]" },
+            "本薪": { emoji: "💰", color: "bg-[#c8e6c9]" },
+            "獎金": { emoji: "🏆", color: "bg-[#fff9c4]" },
+            "加班費": { emoji: "⏱️", color: "bg-[#ffecb3]" },
+            "股息": { emoji: "🪙", color: "bg-[#ffcc80]" },
+            "利息": { emoji: "💹", color: "bg-[#a5d6a7]" },
+            "資本利得": { emoji: "🚀", color: "bg-[#e1bee7]" },
+            "中獎": { emoji: "🎁", color: "bg-[#ffcdd2]" },
+            "退款": { emoji: "↩️", color: "bg-[#cfd8dc]" },
+            "其他": { emoji: "🧾", color: "bg-[#f5f5f5]" }
         };
 
         function getAmountColor(amount, type) {
@@ -559,11 +581,13 @@
                 html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-[#5a6270]">${dayStr}</span><span class="text-xs font-bold text-[#8c91b5] mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-[#e9ebf2] overflow-hidden divide-y divide-[#e8ecf1]">`;
                 
                 grouped[date].forEach(r => {
-                    const mainCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
-                    const styleInfo = categoryStyleMap[mainCat];
+                    const subCategory = r.category.includes("-") ? r.category.split("-")[1] : r.category;
                     
-                    const iconBg = styleInfo ? styleInfo.color : (r.type === 'expense' ? 'bg-[#fcf5f8]' : 'bg-[#f5fcf8]');
-                    const iconContent = styleInfo ? `<span class="text-xl">${styleInfo.emoji}</span>` : `<i class="ph ${r.type === 'expense' ? 'ph-trend-down text-[#d1a8b9]' : 'ph-trend-up text-[#a8d1b9]'} text-lg"></i>`;
+                    // 若找不到該分類，給予預設 Emoji 與顏色
+                    const config = categoryConfig[subCategory] || {
+                        emoji: r.type === "expense" ? "📉" : "📈",
+                        color: r.type === "expense" ? "bg-[#fcf5f8]" : "bg-[#f5fcf8]"
+                    };
                     
                     // ✨ [新增] 動態標籤顏色邏輯 ✨
                     let accBadge = '';
@@ -583,8 +607,8 @@
                     html += `
                     <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-[#fcfcfd] active:bg-[#e8ecf1] cursor-pointer transition-colors group">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg} group-active:scale-90 transition-transform shadow-[inset_0_2px_4px_rgba(255,255,255,0.6)]">
-                                ${iconContent}
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${config.color} group-active:scale-90 transition-transform shadow-[inset_0_2px_4px_rgba(255,255,255,0.6)]">
+                                <span class="text-xl">${config.emoji}</span>
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-[#5c5f85] mb-0.5 flex items-center">${r.category} ${accBadge}</p>
