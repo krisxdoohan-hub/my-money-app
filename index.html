@@ -275,7 +275,7 @@
                 <div id="settings-msg" class="text-center text-xs font-bold opacity-0 transition-opacity duration-300 h-4"></div>
             </div>
             <div class="p-4 text-center text-[10px] text-[#b5b8d1] font-medium border-t border-[#e9ebf2] bg-[#f8f9fc] rounded-b-[24px]">
-                System Version: v0.0.0.1 (莫蘭迪粉藍升級版)
+                System Version: v0.0.0.0.1 (莫蘭迪粉藍+ICON圖示升級版)
             </div>
         </div>
     </div>
@@ -305,6 +305,17 @@
         const accountMap = {
             '現金': [],
             '信用卡': ['中信卡', '玉山卡']
+        };
+
+        const categoryStyleMap = {
+            '餐點': { emoji: '🍜', color: 'bg-[#fdf6e3]' },
+            '交通': { emoji: '🚆', color: 'bg-[#fae8e8]' },
+            '生活': { emoji: '🛍️', color: 'bg-[#e8f4f8]' },
+            '娛樂': { emoji: '🎮', color: 'bg-[#f3e8ff]' },
+            '投資': { emoji: '📈', color: 'bg-[#e3f2fd]' },
+            '薪資': { emoji: '💰', color: 'bg-[#e8f5e9]' },
+            '其他收入': { emoji: '🎁', color: 'bg-[#fff3e0]' },
+            '其他': { emoji: '🧾', color: 'bg-[#f5f5f5]' }
         };
 
         function getAmountColor(amount, type) {
@@ -548,8 +559,11 @@
                 html += `<div class="mb-6"><div class="flex items-end gap-2 mb-3 px-1"><span class="text-lg font-black text-[#5a6270]">${dayStr}</span><span class="text-xs font-bold text-[#8c91b5] mb-1">週${wd}</span></div><div class="bg-white rounded-[20px] shadow-sm border border-[#e9ebf2] overflow-hidden divide-y divide-[#e8ecf1]">`;
                 
                 grouped[date].forEach(r => {
-                    const iconColor = r.type === 'expense' ? 'bg-[#fcf5f8] text-[#d1a8b9]' : 'bg-[#f5fcf8] text-[#a8d1b9]';
-                    const iconPh = r.type === 'expense' ? 'ph-trend-down' : 'ph-trend-up';
+                    const mainCat = r.category.includes('-') ? r.category.split('-')[0] : r.category;
+                    const styleInfo = categoryStyleMap[mainCat];
+                    
+                    const iconBg = styleInfo ? styleInfo.color : (r.type === 'expense' ? 'bg-[#fcf5f8]' : 'bg-[#f5fcf8]');
+                    const iconContent = styleInfo ? `<span class="text-xl">${styleInfo.emoji}</span>` : `<i class="ph ${r.type === 'expense' ? 'ph-trend-down text-[#d1a8b9]' : 'ph-trend-up text-[#a8d1b9]'} text-lg"></i>`;
                     
                     // ✨ [新增] 動態標籤顏色邏輯 ✨
                     let accBadge = '';
@@ -569,8 +583,8 @@
                     html += `
                     <div onclick="editRecord('${r.id}')" class="p-4 flex justify-between items-center hover:bg-[#fcfcfd] active:bg-[#e8ecf1] cursor-pointer transition-colors group">
                         <div class="flex items-center gap-4">
-                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconColor} group-active:scale-90 transition-transform">
-                                <i class="ph ${iconPh} text-lg"></i>
+                            <div class="w-10 h-10 rounded-full flex items-center justify-center flex-shrink-0 ${iconBg} group-active:scale-90 transition-transform shadow-[inset_0_2px_4px_rgba(255,255,255,0.6)]">
+                                ${iconContent}
                             </div>
                             <div>
                                 <p class="text-sm font-bold text-[#5c5f85] mb-0.5 flex items-center">${r.category} ${accBadge}</p>
